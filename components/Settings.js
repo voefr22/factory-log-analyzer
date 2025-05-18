@@ -1,7 +1,7 @@
 // components/Settings.js - Компонент для настроек пользователя
 
 // Извлекаем компоненты из библиотеки Lucide
-const { Save } = lucide;
+const { Save } = window.lucide;
 
 const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
   return (
@@ -154,7 +154,8 @@ const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
                 />
                 <span className="badge badge-green">Работа</span>
               </div>
-<div className="flex items-center space-x-2">
+              
+              <div className="flex items-center space-x-2">
                 <input
                   type="text"
                   className="form-input"
