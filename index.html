@@ -12,25 +12,24 @@
     <!-- Сообщение об ошибке -->
     <div id="error" style="display:none; color:red; margin:20px;"></div>
     
-    <!-- Подключаем Babel для трансформации JSX -->
-    <script src="https://unpkg.com/@babel/standalone@7.12.9/babel.min.js"></script>
+    <!-- Сначала загружаем основные библиотеки -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
     
-    <!-- Подключаем React и зависимости -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+    <!-- Затем загружаем Recharts (с указанной версией) -->
+    <script src="https://unpkg.com/recharts@2.7.2/umd/Recharts.min.js"></script>
     
-    <!-- Подключаем Recharts для графиков -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.7.2/Recharts.min.js"></script>
-    
-    <!-- Подключаем Lucide для иконок -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Загружаем Lucide и делаем его глобально доступным -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
-        // Глобальное объявление lucide, чтобы он был доступен везде
         window.lucide = lucide;
+        window.Recharts = Recharts;
     </script>
     
-    <!-- Обработка ошибок -->
+    <!-- Babel для JSX -->
+    <script src="https://unpkg.com/@babel/standalone@7.22.10/babel.min.js"></script>
+    
+    <!-- Обработка ошибок - перенесена после библиотек -->
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
             console.error('Ошибка:', message, 'в', source, ':', lineno);
@@ -41,12 +40,16 @@
         };
     </script>
     
-    <!-- Подключаем наши скрипты -->
+    <!-- Вспомогательные функции -->
     <script src="utils.js"></script>
-    <script type="text/babel" src="components/Dashboard.js"></script>
-    <script type="text/babel" src="components/LogViewer.js"></script>
-    <script type="text/babel" src="components/Analytics.js"></script>
-    <script type="text/babel" src="components/Settings.js"></script>
-    <script type="text/babel" src="app.js"></script>
+    
+    <!-- Компоненты с типом text/babel для правильной обработки JSX -->
+    <script type="text/babel" data-presets="react" src="components/Dashboard.js"></script>
+    <script type="text/babel" data-presets="react" src="components/LogViewer.js"></script>
+    <script type="text/babel" data-presets="react" src="components/Analytics.js"></script>
+    <script type="text/babel" data-presets="react" src="components/Settings.js"></script>
+    
+    <!-- Загружаем основное приложение в последнюю очередь -->
+    <script type="text/babel" data-presets="react" src="app.js"></script>
 </body>
 </html>
