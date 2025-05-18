@@ -154,3 +154,35 @@ const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
                 />
                 <span className="badge badge-green">Работа</span>
               </div>
+<div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  className="form-input"
+                  defaultValue="подготовка, настройка, регулировка"
+                  placeholder="Ключевые слова для подготовки"
+                />
+                <span className="badge badge-blue">Подготовка</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Распознавание оборудования</label>
+            <textarea
+              className="form-textarea h-32"
+              defaultValue="ППО-1, ППО-2, ИЧТ-1, ИЧТ-2, ИЧТ-3, ЦМ-7, ЦМ-8, ЛЛ-1, ЛЛ-2, ЛЦ-1, ЛЦ-2, ЛЦ-3, ОЦЛ, ОУОЦ"
+              placeholder="Введите список оборудования через запятую"
+            ></textarea>
+            <p className="text-sm text-gray-500 mt-1">Для улучшения распознавания введите известные модели оборудования</p>
+          </div>
+        </div>
+        
+        <div className="mt-6">
+          <button className="btn btn-primary">
+            Сохранить настройки схемы
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
