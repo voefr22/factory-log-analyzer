@@ -617,3 +617,49 @@ const Analytics = ({ stats, onExportReport }) => {
         <div className="card">
           <h2 className="card-title">Тренды событий по времени</h2>
           <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={stats.timelineData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="Ремонт" stroke="#FF8042" />
+                <Line type="monotone" dataKey="Остановка" stroke="#FF0000" />
+                <Line type="monotone" dataKey="Работа" stroke="#00C49F" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+      
+      {!ResponsiveContainer && (
+        <div className="card">
+          <h2 className="card-title">Сводная статистика</h2>
+          <div className="space-y-3">
+            <div>
+              <h3 className="font-semibold">Типы событий:</h3>
+              <ul className="list-disc ml-5">
+                {stats.eventTypeStats.map((item, index) => (
+                  <li key={index}>{item.name}: {item.value}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold">Основное оборудование:</h3>
+              <ul className="list-disc ml-5">
+                {stats.equipmentStats.slice(0, 7).map((item, index) => (
+                  <li key={index}>{item.name}: {item.value} событий</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
