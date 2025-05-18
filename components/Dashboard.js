@@ -5,7 +5,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF0000'
 
 // Извлекаем компоненты из библиотек Recharts и Lucide
 const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, 
-      XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend } = window.Recharts;
 const { AlertTriangle, TrendingUp, Database, Clock } = window.lucide;
 
 const Dashboard = ({ parsedData, equipmentStats, eventTypeStats, timelineData, recommendations, handleGenerateAIRecommendations }) => {
