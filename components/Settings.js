@@ -1,19 +1,11 @@
 // components/Settings.js - Компонент для настроек пользователя
 
-// Импортируем иконки из Lucide
-const {
-    Save,
-    Key,
-    Bell,
-    Clock,
-    Database,
-    AlertCircle,
-    CheckCircle2,
-    XCircle,
-    Settings as SettingsIcon
+// Получаем иконки из lucide через глобальную переменную window
+const { 
+    Save, Bell, Clock, Database, Key, AlertCircle, Settings as SettingsIcon 
 } = window.lucide;
 
-// Делаем Settings доступным глобально через window
+// Делаем компонент Settings доступным глобально
 window.Settings = ({ 
     apiKeys, 
     setApiKeys, 
@@ -22,206 +14,193 @@ window.Settings = ({
     setAnalysisSettings,
     handleSaveAnalysisSettings
 }) => {
-    // Обработка ошибок при отсутствии данных
+    // Проверка наличия необходимых данных
     if (!apiKeys || !analysisSettings) {
         return (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2 text-red-600">
-                    <AlertCircle className="w-5 h-5" />
-                    <h3 className="text-lg font-medium">Ошибка загрузки настроек</h3>
-                </div>
-                <p className="mt-2 text-red-500">
-                    Не удалось загрузить настройки. Пожалуйста, проверьте подключение и попробуйте снова.
-                </p>
+            <div className="error-state">
+                <AlertCircle size={24} className="text-red-500" />
+                <p>Отсутствуют необходимые данные для отображения</p>
             </div>
         );
     }
 
-    // Компонент для отображения API ключей
+    // Компонент настроек API ключей
     const ApiKeysSection = () => (
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2 mb-4">
-                <Key className="w-5 h-5 text-gray-500" />
-                <h3 className="text-lg font-medium text-gray-900">API Ключи</h3>
-            </div>
+        <div className="card">
+            <h2 className="card-title">Настройки API нейросетей</h2>
+            <p className="text-gray-600 mb-4">
+                Для генерации расширенных рекомендаций и аналитики, введите ключи API. 
+                Ваши ключи хранятся локально и не передаются на сервер.
+            </p>
             
             <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        OpenAI API Key
-                    </label>
-                    <input
-                        type="password"
-                        value={apiKeys.openai || ''}
-                        onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="sk-..."
-                    />
+                <div className="form-group">
+                    <label className="form-label">OpenAI API ключ</label>
+                    <div className="relative">
+                        <input
+                            type="password"
+                            value={apiKeys.openai}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, openai: e.target.value }))}
+                            className="form-input pl-8"
+                            placeholder="sk-..."
+                        />
+                        <Key size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Anthropic API Key
-                    </label>
-                    <input
-                        type="password"
-                        value={apiKeys.anthropic || ''}
-                        onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="sk-ant-..."
-                    />
+                
+                <div className="form-group">
+                    <label className="form-label">Anthropic API ключ</label>
+                    <div className="relative">
+                        <input
+                            type="password"
+                            value={apiKeys.anthropic}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, anthropic: e.target.value }))}
+                            className="form-input pl-8"
+                            placeholder="sk_ant-..."
+                        />
+                        <Key size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Cohere API Key
-                    </label>
-                    <input
-                        type="password"
-                        value={apiKeys.cohere || ''}
-                        onChange={(e) => setApiKeys({ ...apiKeys, cohere: e.target.value })}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="..."
-                    />
+                
+                <div className="form-group">
+                    <label className="form-label">Cohere API ключ</label>
+                    <div className="relative">
+                        <input
+                            type="password"
+                            value={apiKeys.cohere || ''}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, cohere: e.target.value }))}
+                            className="form-input pl-8"
+                            placeholder="ck-..."
+                        />
+                        <Key size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
-
-                <div className="flex justify-end">
-                    <button
-                        onClick={handleSaveApiKeys}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        <Save className="w-4 h-4" />
-                        Сохранить ключи
-                    </button>
-                </div>
+            </div>
+            
+            <div className="mt-6">
+                <button 
+                    className="btn btn-primary flex items-center space-x-2"
+                    onClick={handleSaveApiKeys}
+                >
+                    <Save size={16} />
+                    <span>Сохранить настройки</span>
+                </button>
             </div>
         </div>
     );
 
-    // Компонент для отображения настроек анализа
+    // Компонент настроек анализа
     const AnalysisSettingsSection = () => (
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2 mb-4">
-                <SettingsIcon className="w-5 h-5 text-gray-500" />
-                <h3 className="text-lg font-medium text-gray-900">Настройки анализа</h3>
-            </div>
-
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Интервал обновления (минуты)
-                    </label>
-                    <input
-                        type="number"
-                        value={analysisSettings.updateInterval || 5}
-                        onChange={(e) => setAnalysisSettings({ 
-                            ...analysisSettings, 
-                            updateInterval: parseInt(e.target.value) || 5 
-                        })}
-                        min="1"
-                        max="60"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
+        <div className="card">
+            <h2 className="card-title">Настройки анализа</h2>
+            
+            <div className="space-y-6">
+                <div className="form-group">
+                    <label className="form-label">Интервал обновления (минуты)</label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={analysisSettings.updateInterval}
+                            onChange={(e) => setAnalysisSettings(prev => ({ 
+                                ...prev, 
+                                updateInterval: parseInt(e.target.value) || 0 
+                            }))}
+                            className="form-input pl-8"
+                            min="1"
+                            max="60"
+                        />
+                        <Clock size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Автоматические рекомендации
-                    </label>
-                    <div className="flex items-center gap-2">
+                <div className="form-group">
+                    <label className="form-label">Автоматические рекомендации</label>
+                    <div className="flex items-center space-x-2">
                         <input
                             type="checkbox"
-                            checked={analysisSettings.autoRecommendations || false}
-                            onChange={(e) => setAnalysisSettings({ 
-                                ...analysisSettings, 
+                            checked={analysisSettings.autoRecommendations}
+                            onChange={(e) => setAnalysisSettings(prev => ({ 
+                                ...prev, 
                                 autoRecommendations: e.target.checked 
-                            })}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            }))}
+                            className="form-checkbox"
                         />
-                        <span className="text-sm text-gray-500">
-                            Включить автоматическую генерацию рекомендаций
-                        </span>
+                        <span className="text-gray-700">Включить автоматическую генерацию рекомендаций</span>
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Уведомления
-                    </label>
+                <div className="form-group">
+                    <label className="form-label">Уведомления</label>
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
-                                checked={analysisSettings.notifications.email || false}
-                                onChange={(e) => setAnalysisSettings({ 
-                                    ...analysisSettings, 
+                                checked={analysisSettings.notifications.email}
+                                onChange={(e) => setAnalysisSettings(prev => ({ 
+                                    ...prev, 
                                     notifications: {
-                                        ...analysisSettings.notifications,
+                                        ...prev.notifications,
                                         email: e.target.checked
                                     }
-                                })}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                }))}
+                                className="form-checkbox"
                             />
-                            <span className="text-sm text-gray-500">Email</span>
+                            <span className="text-gray-700">Email уведомления</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
-                                checked={analysisSettings.notifications.telegram || false}
-                                onChange={(e) => setAnalysisSettings({ 
-                                    ...analysisSettings, 
+                                checked={analysisSettings.notifications.telegram}
+                                onChange={(e) => setAnalysisSettings(prev => ({ 
+                                    ...prev, 
                                     notifications: {
-                                        ...analysisSettings.notifications,
+                                        ...prev.notifications,
                                         telegram: e.target.checked
                                     }
-                                })}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                }))}
+                                className="form-checkbox"
                             />
-                            <span className="text-sm text-gray-500">Telegram</span>
+                            <span className="text-gray-700">Telegram уведомления</span>
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Хранение истории
-                    </label>
-                    <select
-                        value={analysisSettings.historyRetention || '30'}
-                        onChange={(e) => setAnalysisSettings({ 
-                            ...analysisSettings, 
-                            historyRetention: e.target.value 
-                        })}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                        <option value="7">7 дней</option>
-                        <option value="30">30 дней</option>
-                        <option value="90">90 дней</option>
-                        <option value="365">1 год</option>
-                    </select>
+                <div className="form-group">
+                    <label className="form-label">Хранение истории</label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={analysisSettings.historyRetention}
+                            onChange={(e) => setAnalysisSettings(prev => ({ 
+                                ...prev, 
+                                historyRetention: parseInt(e.target.value) || 0 
+                            }))}
+                            className="form-input pl-8"
+                            min="1"
+                            max="365"
+                        />
+                        <Database size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Количество дней хранения истории</p>
                 </div>
+            </div>
 
-                <div className="flex justify-end">
-                    <button
-                        onClick={handleSaveAnalysisSettings}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        <Save className="w-4 h-4" />
-                        Сохранить настройки
-                    </button>
-                </div>
+            <div className="mt-6">
+                <button 
+                    className="btn btn-primary flex items-center space-x-2"
+                    onClick={handleSaveAnalysisSettings}
+                >
+                    <Save size={16} />
+                    <span>Сохранить настройки</span>
+                </button>
             </div>
         </div>
     );
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Настройки</h2>
-            
-            <div className="grid grid-cols-1 gap-6">
-                <ApiKeysSection />
-                <AnalysisSettingsSection />
-            </div>
+            <ApiKeysSection />
+            <AnalysisSettingsSection />
         </div>
     );
 };
