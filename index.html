@@ -12,6 +12,9 @@
     <!-- Сообщение об ошибке -->
     <div id="error" style="display:none; color:red; margin:20px;"></div>
     
+    <!-- Подключаем Babel для трансформации JSX -->
+    <script src="https://unpkg.com/@babel/standalone@7.12.9/babel.min.js"></script>
+    
     <!-- Подключаем React и зависимости -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -36,10 +39,10 @@
     
     <!-- Подключаем наши скрипты -->
     <script src="utils.js"></script>
-    <script src="components/Dashboard.js"></script>
-    <script src="components/LogViewer.js"></script>
-    <script src="components/Analytics.js"></script>
-    <script src="components/Settings.js"></script>
-    <script src="app.js"></script>
+    <script type="text/babel" src="components/Dashboard.js"></script>
+    <script type="text/babel" src="components/LogViewer.js"></script>
+    <script type="text/babel" src="components/Analytics.js"></script>
+    <script type="text/babel" src="components/Settings.js"></script>
+    <script type="text/babel" src="app.js"></script>
 </body>
 </html>
