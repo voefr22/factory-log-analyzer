@@ -1,20 +1,12 @@
 // components/LogViewer.js - Компонент для просмотра и фильтрации логов
 
-// Импортируем иконки из Lucide
-const {
-    Search,
-    Filter,
-    ArrowUpDown,
-    X,
-    Calendar,
-    Clock,
-    AlertCircle,
-    CheckCircle2,
-    XCircle,
-    RefreshCw
+// Получаем иконки из lucide через глобальную переменную window
+const { 
+    Search, Filter, ArrowUpDown, X, Calendar, Clock,
+    AlertCircle, CheckCircle2, XCircle, RefreshCw
 } = window.lucide;
 
-// Делаем LogViewer доступным глобально через window
+// Делаем компонент LogViewer доступным глобально
 window.LogViewer = ({ 
     logData, 
     parsedData, 
@@ -26,17 +18,12 @@ window.LogViewer = ({
     resetFilters, 
     handleAnalyzeData 
 }) => {
-    // Обработка ошибок при отсутствии данных
-    if (!logData || !parsedData) {
+    // Проверка наличия необходимых данных
+    if (!logData || !parsedData || !filteredData) {
         return (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2 text-red-600">
-                    <AlertCircle className="w-5 h-5" />
-                    <h3 className="text-lg font-medium">Ошибка загрузки данных</h3>
-                </div>
-                <p className="mt-2 text-red-500">
-                    Не удалось загрузить данные журнала. Пожалуйста, проверьте подключение и попробуйте снова.
-                </p>
+            <div className="error-state">
+                <AlertCircle size={24} className="text-red-500" />
+                <p>Отсутствуют необходимые данные для отображения</p>
             </div>
         );
     }
@@ -44,177 +31,200 @@ window.LogViewer = ({
     // Функция для определения цвета бейджа в зависимости от типа события
     const getEventTypeBadgeColor = (type) => {
         switch (type) {
-            case 'Ремонт': return 'bg-red-100 text-red-800';
-            case 'Работа': return 'bg-green-100 text-green-800';
-            case 'Предупреждение': return 'bg-yellow-100 text-yellow-800';
-            case 'Ошибка': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'Ремонт': return 'badge-red';
+            case 'Остановка': return 'badge-orange';
+            case 'Работа': return 'badge-green';
+            case 'Подготовка': return 'badge-blue';
+            case 'Заливка': return 'badge-yellow';
+            default: return 'badge-gray';
         }
     };
 
-    // Компонент для отображения фильтров
+    // Компонент секции фильтров
     const FilterSection = () => (
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Фильтры</h3>
-                <button
-                    onClick={resetFilters}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Сбросить
-                </button>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Фильтр по оборудованию */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Оборудование
-                    </label>
-                    <select
-                        value={filterOptions.equipment || ''}
+        <div className="mt-4 space-y-4">
+            <div className="flex flex-wrap gap-4">
+                <div className="form-group">
+                    <label className="form-label">Оборудование</label>
+                    <select 
+                        className="form-input"
+                        value={filterOptions.equipment}
                         onChange={(e) => handleFilterChange('equipment', e.target.value)}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                         <option value="">Все</option>
-                        {Array.from(new Set(parsedData.map(item => item.equipment))).map(equipment => (
-                            <option key={equipment} value={equipment}>{equipment}</option>
+                        {[...new Set(parsedData.map(item => item.equipment).filter(Boolean))].map(equip => (
+                            <option key={equip} value={equip}>{equip}</option>
                         ))}
                     </select>
                 </div>
-
-                {/* Фильтр по типу события */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Тип события
-                    </label>
-                    <select
-                        value={filterOptions.eventType || ''}
+                
+                <div className="form-group">
+                    <label className="form-label">Тип события</label>
+                    <select 
+                        className="form-input"
+                        value={filterOptions.eventType}
                         onChange={(e) => handleFilterChange('eventType', e.target.value)}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                         <option value="">Все</option>
-                        {Array.from(new Set(parsedData.map(item => item.eventType))).map(type => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
+                        <option value="Ремонт">Ремонт</option>
+                        <option value="Остановка">Остановка</option>
+                        <option value="Работа">Работа</option>
+                        <option value="Подготовка">Подготовка</option>
+                        <option value="Заливка">Заливка</option>
+                        <option value="Информация">Информация</option>
                     </select>
                 </div>
-
-                {/* Фильтр по дате */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Дата начала
-                    </label>
-                    <input
-                        type="date"
-                        value={filterOptions.startDate || ''}
-                        onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
+                
+                <div className="form-group">
+                    <label className="form-label">Дата от</label>
+                    <div className="relative">
+                        <input 
+                            type="date" 
+                            className="form-input pl-8"
+                            value={filterOptions.dateFrom}
+                            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                        />
+                        <Calendar size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Дата окончания
-                    </label>
-                    <input
-                        type="date"
-                        value={filterOptions.endDate || ''}
-                        onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
+                
+                <div className="form-group">
+                    <label className="form-label">Дата до</label>
+                    <div className="relative">
+                        <input 
+                            type="date" 
+                            className="form-input pl-8"
+                            value={filterOptions.dateTo}
+                            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                        />
+                        <Calendar size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                 </div>
             </div>
+        </div>
+    );
 
-            <div className="mt-4 flex justify-end">
-                <button
-                    onClick={applyFilters}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    Применить фильтры
-                </button>
-            </div>
+    // Компонент таблицы данных
+    const DataTable = () => (
+        <div className="table-container">
+            <table className="min-w-full bg-white">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <th>
+                            <div className="sort-button">
+                                <span>Дата</span>
+                                <ArrowUpDown size={14} />
+                            </div>
+                        </th>
+                        <th>
+                            <div className="sort-button">
+                                <span>Время</span>
+                                <ArrowUpDown size={14} />
+                            </div>
+                        </th>
+                        <th>
+                            <div className="sort-button">
+                                <span>Оборудование</span>
+                                <ArrowUpDown size={14} />
+                            </div>
+                        </th>
+                        <th>
+                            <div className="sort-button">
+                                <span>Тип события</span>
+                                <ArrowUpDown size={14} />
+                            </div>
+                        </th>
+                        <th>Сообщение</th>
+                        <th>Источник</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {filteredData.map((entry, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                            <td>{entry.date}</td>
+                            <td>{entry.eventTime}</td>
+                            <td>{entry.equipment || '-'}</td>
+                            <td>
+                                <span className={`badge ${getEventTypeBadgeColor(entry.eventType)}`}>
+                                    {entry.eventType}
+                                </span>
+                            </td>
+                            <td className="max-w-md truncate">{entry.message}</td>
+                            <td>{entry.source}</td>
+                        </tr>
+                    ))}
+                    
+                    {filteredData.length === 0 && (
+                        <tr>
+                            <td colSpan={6} className="text-center text-gray-500 italic py-4">
+                                Нет данных для отображения
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 
     return (
         <div className="space-y-6">
-            {/* Заголовок и кнопка анализа */}
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Просмотр журнала</h2>
-                <button
-                    onClick={handleAnalyzeData}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    Анализировать данные
-                </button>
+            {/* Секция ввода данных */}
+            <div className="card">
+                <h2 className="card-title">Ввод данных журнала</h2>
+                <div className="mb-4">
+                    <textarea 
+                        value={logData}
+                        onChange={handleLogDataChange}
+                        className="form-textarea"
+                        placeholder="Вставьте журнал диспетчера здесь..."
+                        rows={6}
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <button 
+                        className="btn btn-primary flex items-center space-x-2"
+                        onClick={() => handleAnalyzeData(logData)}
+                    >
+                        <RefreshCw size={16} />
+                        <span>Анализировать данные</span>
+                    </button>
+                </div>
             </div>
-
-            {/* Ввод данных */}
-            <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Ввод данных журнала</h3>
-                <textarea
-                    value={logData}
-                    onChange={(e) => handleLogDataChange(e.target.value)}
-                    placeholder="Вставьте данные журнала здесь..."
-                    className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    rows={10}
-                />
-            </div>
-
-            {/* Фильтры */}
-            <FilterSection />
-
-            {/* Таблица данных */}
-            <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Результаты</h3>
-                {filteredData && filteredData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Дата
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Оборудование
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Тип события
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Описание
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredData.map((item, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {new Date(item.timestamp).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {item.equipment}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEventTypeBadgeColor(item.eventType)}`}>
-                                                {item.eventType}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {item.description}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            
+            {/* Секция просмотра данных */}
+            <div className="card">
+                <div className="card-header">
+                    <h2 className="card-title">Журнал событий</h2>
+                    <div className="flex items-center space-x-2">
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                placeholder="Поиск..." 
+                                className="form-input pl-8"
+                                value={filterOptions.searchText}
+                                onChange={(e) => handleFilterChange('searchText', e.target.value)}
+                            />
+                            <Search size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                        <button 
+                            className="btn btn-blue flex items-center space-x-2"
+                            onClick={applyFilters}
+                        >
+                            <Filter size={16} />
+                            <span>Применить</span>
+                        </button>
+                        <button 
+                            className="btn btn-gray flex items-center space-x-2"
+                            onClick={resetFilters}
+                        >
+                            <X size={16} />
+                            <span>Сбросить</span>
+                        </button>
                     </div>
-                ) : (
-                    <div className="text-center py-8">
-                        <p className="text-gray-500">Нет данных для отображения</p>
-                    </div>
-                )}
+                </div>
+                
+                <FilterSection />
+                <DataTable />
             </div>
         </div>
     );
