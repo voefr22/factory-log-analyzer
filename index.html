@@ -3,122 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ЗаводАналитикс - Система анализа журнала диспетчера">
+    <meta name="description" content="ЗаводАналитикс - Система анализа журнала диспетчера для промышленных предприятий">
     <meta name="theme-color" content="#2563eb">
     <title>ЗаводАналитикс - Анализ журнала диспетчера</title>
     
     <!-- Предзагрузка критических ресурсов -->
     <link rel="preload" href="styles.css" as="style">
-    <link rel="preload" href="https://unpkg.com/react@18.2.0/umd/react.production.min.js" as="script">
-    <link rel="preload" href="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" as="script">
+    <link rel="preload" href="utils.js" as="script">
     
     <!-- Стили -->
     <link rel="stylesheet" href="styles.css">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏭</text></svg>">
 </head>
 <body>
     <!-- Корневой элемент для React -->
     <div id="root">
         <div class="loading-screen">
             <div class="loading-spinner"></div>
-            <p>Загрузка приложения...</p>
+            <p class="loading-text">Загрузка приложения...</p>
         </div>
     </div>
     
-    <!-- Сообщение об ошибке -->
+    <!-- Контейнер для ошибок -->
     <div id="error" class="error-container" style="display:none">
         <div class="error-content">
-            <h3>Произошла ошибка</h3>
-            <p id="error-message"></p>
-            <p id="error-details"></p>
-            <button onclick="document.getElementById('error').style.display='none'" class="error-close">
-                Закрыть
-            </button>
+            <div class="error-header">
+                <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <h3 class="error-title">Ошибка</h3>
+                <button class="error-close" onclick="this.parentElement.parentElement.parentElement.style.display='none'">×</button>
+            </div>
+            <div class="error-message"></div>
+            <div class="error-details" style="display:none"></div>
         </div>
     </div>
     
-    <!-- Подключаем основные библиотеки -->
+    <!-- Библиотеки с проверкой целостности -->
     <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" 
-            integrity="sha384-8iBk79BHqMlbPedRBToVQxu92ZVBvRSYuVyquHL+WDxXsuTQ9qb3Iu2qstPG3zsw"
+            integrity="sha384-8iBk79BHydB4HKr0zPL0cVvQn1Dp6cUF60L8aX8X2ig8KNB4LN0eP6L/q9gKD0Uml"
             crossorigin="anonymous"></script>
     <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"
-            integrity="sha384-MO+oZf9HrZa9JqjdHRczOKnT74z1BEmnazg+HVxkz8KfwpEfLtQ3/Iol2XUsYOuM"
+            integrity="sha384-62C7m7miDiuqR81U2o3V2bXkQhhBG3L/kWQpW5Fg3YfV8sz1i8I8aLtq8jfkZi4H"
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/recharts@2.7.2/umd/Recharts.js"
+            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@latest"
+            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"
+            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
             crossorigin="anonymous"></script>
     
-    <!-- Подключаем Recharts -->
-    <script src="https://unpkg.com/recharts@2.7.2/umd/Recharts.min.js"
-            integrity="sha384-9fZkXf13B02t2wSzaSla0TFO4h4j1Mvqf1H8ny9fvpl6mTl0nmtZ8F4o6BxU3Tzt"
-            crossorigin="anonymous"></script>
-    <script>
-        window.Recharts = Recharts;
-    </script>
-    
-    <!-- Подключаем Lucide -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"
-            integrity="sha384-9fZkXf13B02t2wSzaSla0TFO4h4j1Mvqf1H8ny9fvpl6mTl0nmtZ8F4o6BxU3Tzt"
-            crossorigin="anonymous"></script>
-    <script>
-        window.lucide = lucide;
-        // Инициализация иконок
-        if (window.lucide && window.lucide.createIcons) {
-            window.lucide.createIcons();
-        }
-    </script>
-    
-    <!-- Babel для JSX -->
-    <script src="https://unpkg.com/@babel/standalone@7.22.10/babel.min.js"
-            integrity="sha384-9fZkXf13B02t2wSzaSla0TFO4h4j1Mvqf1H8ny9fvpl6mTl0nmtZ8F4o6BxU3Tzt"
-            crossorigin="anonymous"></script>
-    
-    <!-- Обработка ошибок -->
+    <!-- Глобальные объекты и инициализация -->
     <script>
         // Глобальный обработчик ошибок
         window.onerror = function(message, source, lineno, colno, error) {
-            console.error('Ошибка:', message, 'в', source, ':', lineno);
-            
-            const errorDiv = document.getElementById('error');
-            const errorMessage = document.getElementById('error-message');
-            const errorDetails = document.getElementById('error-details');
-            
-            errorDiv.style.display = 'block';
-            errorMessage.textContent = message;
-            
-            let details = [];
-            if (source) details.push('Файл: ' + source);
-            if (lineno) details.push('Строка: ' + lineno);
-            if (error && error.stack) details.push('Стек: ' + error.stack);
-            
-            errorDetails.textContent = details.join(' | ');
-            
-            return true;
+            console.error('Глобальная ошибка:', { message, source, lineno, colno, error });
+            showError('Произошла ошибка в приложении', error?.message || message);
+            return false;
         };
 
-        // Обработка необработанных промисов
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Необработанная ошибка промиса:', event.reason);
+        // Обработчик необработанных отклонений промисов
+        window.onunhandledrejection = function(event) {
+            console.error('Необработанное отклонение промиса:', event.reason);
+            showError('Ошибка при выполнении операции', event.reason?.message || 'Неизвестная ошибка');
+        };
+
+        // Функция отображения ошибок
+        function showError(title, message, details) {
+            const errorContainer = document.getElementById('error');
+            const errorTitle = errorContainer.querySelector('.error-title');
+            const errorMessage = errorContainer.querySelector('.error-message');
+            const errorDetails = errorContainer.querySelector('.error-details');
             
-            const errorDiv = document.getElementById('error');
-            const errorMessage = document.getElementById('error-message');
-            const errorDetails = document.getElementById('error-details');
+            errorTitle.textContent = title;
+            errorMessage.textContent = message;
             
-            errorDiv.style.display = 'block';
-            errorMessage.textContent = event.reason.message || 'Произошла ошибка при выполнении операции';
-            errorDetails.textContent = 'Тип: Необработанная ошибка промиса';
-        });
+            if (details) {
+                errorDetails.textContent = details;
+                errorDetails.style.display = 'block';
+            } else {
+                errorDetails.style.display = 'none';
+            }
+            
+            errorContainer.style.display = 'block';
+        }
+
+        // Инициализация приложения
+        window.initApp = function() {
+            console.log('Инициализация приложения...');
+            
+            // Проверка наличия библиотек
+            const requiredLibs = {
+                'React': window.React,
+                'ReactDOM': window.ReactDOM,
+                'Recharts': window.Recharts,
+                'lucide': window.lucide
+            };
+            
+            const missingLibs = Object.entries(requiredLibs)
+                .filter(([_, lib]) => !lib)
+                .map(([name]) => name);
+            
+            if (missingLibs.length > 0) {
+                throw new Error(`Отсутствуют необходимые библиотеки: ${missingLibs.join(', ')}`);
+            }
+            
+            // Инициализация иконок
+            if (window.lucide?.createIcons) {
+                window.lucide.createIcons();
+            }
+            
+            console.log('Приложение инициализировано успешно');
+        };
     </script>
     
-    <!-- Вспомогательные функции -->
+    <!-- Утилиты -->
     <script src="utils.js"></script>
     
     <!-- Компоненты приложения -->
-    <script type="text/babel" data-presets="react" src="components/Dashboard.js"></script>
-    <script type="text/babel" data-presets="react" src="components/LogViewer.js"></script>
-    <script type="text/babel" data-presets="react" src="components/Analytics.js"></script>
-    <script type="text/babel" data-presets="react" src="components/Settings.js"></script>
+    <script type="text/babel" src="app.js"></script>
     
-    <!-- Основное приложение -->
-    <script type="text/babel" data-presets="react" src="app.js"></script>
+    <!-- Инициализация после загрузки DOM -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                window.initApp();
+            } catch (error) {
+                console.error('Ошибка при инициализации:', error);
+                showError('Ошибка инициализации', error.message);
+            }
+        });
+    </script>
 </body>
 </html>
