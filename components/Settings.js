@@ -1,190 +1,227 @@
 // components/Settings.js - Компонент для настроек пользователя
 
-// Получаем иконки из Lucide
-const { Save, Bell, Clock, Database } = window.lucide;
+// Импортируем иконки из Lucide
+const {
+    Save,
+    Key,
+    Bell,
+    Clock,
+    Database,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    Settings as SettingsIcon
+} = window.lucide;
 
-const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
-  return (
-    <div className="space-y-6">
-      <div className="card">
-        <h2 className="card-title">Настройки API нейросетей</h2>
-        <p className="text-gray-600 mb-4">
-          Для генерации расширенных рекомендаций и аналитики, введите ключи API. Ваши ключи хранятся локально и не передаются на сервер.
-        </p>
-        
-        <div className="space-y-4">
-          <div className="form-group">
-            <label className="form-label">OpenAI API ключ</label>
-            <input
-              type="password"
-              value={apiKeys.openai}
-              onChange={(e) => setApiKeys(prev => ({ ...prev, openai: e.target.value }))}
-              className="form-input"
-              placeholder="sk-..."
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Anthropic API ключ</label>
-            <input
-              type="password"
-              value={apiKeys.anthropic}
-              onChange={(e) => setApiKeys(prev => ({ ...prev, anthropic: e.target.value }))}
-              className="form-input"
-              placeholder="sk_ant-..."
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Cohere API ключ</label>
-            <input
-              type="password"
-              value={apiKeys.cohere || ''}
-              onChange={(e) => setApiKeys(prev => ({ ...prev, cohere: e.target.value }))}
-              className="form-input"
-              placeholder="ck-..."
-            />
-          </div>
-        </div>
-        
-        <div className="mt-6">
-          <button 
-            className="btn btn-primary flex items-center space-x-2"
-            onClick={handleSaveApiKeys}
-          >
-            <Save size={16} />
-            <span>Сохранить настройки</span>
-          </button>
-        </div>
-      </div>
-      
-      <div className="card">
-        <h2 className="card-title">Настройки анализа</h2>
-        
-        <div className="space-y-4">
-          <div className="form-group">
-            <label className="form-label flex items-center space-x-2">
-              <Clock size={16} />
-              <span>Интервал обновления (минуты)</span>
-            </label>
-            <input
-              type="number"
-              className="form-input"
-              placeholder="15"
-              min="1"
-              max="60"
-              defaultValue="15"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="h-5 w-5 text-blue-600" />
-              <span>Автоматически генерировать рекомендации</span>
-            </label>
-          </div>
-          
-          <div className="form-group">
-            <label className="flex items-center space-x-2">
-              <Bell size={16} />
-              <span>Отправлять уведомления о критических проблемах</span>
-            </label>
-            <div className="mt-2 ml-7">
-              <label className="flex items-center space-x-2">
-                <input type="checkbox" className="h-4 w-4 text-blue-600" />
-                <span className="text-sm">Email</span>
-              </label>
-              <label className="flex items-center space-x-2 mt-2">
-                <input type="checkbox" className="h-4 w-4 text-blue-600" />
-                <span className="text-sm">Telegram</span>
-              </label>
+// Делаем Settings доступным глобально через window
+window.Settings = ({ 
+    apiKeys, 
+    setApiKeys, 
+    handleSaveApiKeys,
+    analysisSettings,
+    setAnalysisSettings,
+    handleSaveAnalysisSettings
+}) => {
+    // Обработка ошибок при отсутствии данных
+    if (!apiKeys || !analysisSettings) {
+        return (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle className="w-5 h-5" />
+                    <h3 className="text-lg font-medium">Ошибка загрузки настроек</h3>
+                </div>
+                <p className="mt-2 text-red-500">
+                    Не удалось загрузить настройки. Пожалуйста, проверьте подключение и попробуйте снова.
+                </p>
             </div>
-          </div>
-          
-          <div className="form-group">
-            <label className="flex items-center space-x-2">
-              <Database size={16} />
-              <span>Сохранять историю журнала</span>
-            </label>
-            <div className="mt-2 ml-7">
-              <label className="form-label text-sm">Глубина хранения истории (дни)</label>
-              <input
-                type="number"
-                className="form-input mt-1"
-                placeholder="30"
-                min="1"
-                max="365"
-                defaultValue="30"
-              />
+        );
+    }
+
+    // Компонент для отображения API ключей
+    const ApiKeysSection = () => (
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+                <Key className="w-5 h-5 text-gray-500" />
+                <h3 className="text-lg font-medium text-gray-900">API Ключи</h3>
             </div>
-          </div>
-        </div>
-        
-        <div className="mt-6">
-          <button className="btn btn-primary">
-            Сохранить настройки
-          </button>
-        </div>
-      </div>
-      
-      <div className="card">
-        <h2 className="card-title">Схема анализа данных</h2>
-        
-        <p className="text-gray-600 mb-4">
-          Настройте схему анализа данных для повышения точности распознавания событий в журнале диспетчера.
-        </p>
-        
-        <div className="space-y-4">
-          <div className="form-group">
-            <label className="form-label">Шаблоны событий</label>
-            <textarea
-              className="form-textarea"
-              rows={4}
-              placeholder="Введите шаблоны для распознавания событий..."
-            />
-            <p className="text-sm text-gray-500 mt-1">
-              Каждый шаблон должен быть на новой строке. Используйте {event} для обозначения типа события.
-            </p>
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Исключения</label>
-            <textarea
-              className="form-textarea"
-              rows={3}
-              placeholder="Введите исключения для фильтрации ложных срабатываний..."
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Приоритеты событий</label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="w-24">Критический:</span>
-                <input type="text" className="form-input" placeholder="Ремонт, Авария" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-24">Высокий:</span>
-                <input type="text" className="form-input" placeholder="Остановка" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-24">Средний:</span>
-                <input type="text" className="form-input" placeholder="Подготовка" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-24">Низкий:</span>
-                <input type="text" className="form-input" placeholder="Информация" />
-              </div>
+            
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        OpenAI API Key
+                    </label>
+                    <input
+                        type="password"
+                        value={apiKeys.openai || ''}
+                        onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="sk-..."
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Anthropic API Key
+                    </label>
+                    <input
+                        type="password"
+                        value={apiKeys.anthropic || ''}
+                        onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="sk-ant-..."
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cohere API Key
+                    </label>
+                    <input
+                        type="password"
+                        value={apiKeys.cohere || ''}
+                        onChange={(e) => setApiKeys({ ...apiKeys, cohere: e.target.value })}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="..."
+                    />
+                </div>
+
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleSaveApiKeys}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        <Save className="w-4 h-4" />
+                        Сохранить ключи
+                    </button>
+                </div>
             </div>
-          </div>
         </div>
-        
-        <div className="mt-6">
-          <button className="btn btn-primary">
-            Сохранить схему
-          </button>
+    );
+
+    // Компонент для отображения настроек анализа
+    const AnalysisSettingsSection = () => (
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+                <SettingsIcon className="w-5 h-5 text-gray-500" />
+                <h3 className="text-lg font-medium text-gray-900">Настройки анализа</h3>
+            </div>
+
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Интервал обновления (минуты)
+                    </label>
+                    <input
+                        type="number"
+                        value={analysisSettings.updateInterval || 5}
+                        onChange={(e) => setAnalysisSettings({ 
+                            ...analysisSettings, 
+                            updateInterval: parseInt(e.target.value) || 5 
+                        })}
+                        min="1"
+                        max="60"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Автоматические рекомендации
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={analysisSettings.autoRecommendations || false}
+                            onChange={(e) => setAnalysisSettings({ 
+                                ...analysisSettings, 
+                                autoRecommendations: e.target.checked 
+                            })}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-500">
+                            Включить автоматическую генерацию рекомендаций
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Уведомления
+                    </label>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={analysisSettings.notifications.email || false}
+                                onChange={(e) => setAnalysisSettings({ 
+                                    ...analysisSettings, 
+                                    notifications: {
+                                        ...analysisSettings.notifications,
+                                        email: e.target.checked
+                                    }
+                                })}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-500">Email</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={analysisSettings.notifications.telegram || false}
+                                onChange={(e) => setAnalysisSettings({ 
+                                    ...analysisSettings, 
+                                    notifications: {
+                                        ...analysisSettings.notifications,
+                                        telegram: e.target.checked
+                                    }
+                                })}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-500">Telegram</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Хранение истории
+                    </label>
+                    <select
+                        value={analysisSettings.historyRetention || '30'}
+                        onChange={(e) => setAnalysisSettings({ 
+                            ...analysisSettings, 
+                            historyRetention: e.target.value 
+                        })}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option value="7">7 дней</option>
+                        <option value="30">30 дней</option>
+                        <option value="90">90 дней</option>
+                        <option value="365">1 год</option>
+                    </select>
+                </div>
+
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleSaveAnalysisSettings}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        <Save className="w-4 h-4" />
+                        Сохранить настройки
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
+
+    return (
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Настройки</h2>
+            
+            <div className="grid grid-cols-1 gap-6">
+                <ApiKeysSection />
+                <AnalysisSettingsSection />
+            </div>
+        </div>
+    );
 };
