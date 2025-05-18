@@ -1,178 +1,172 @@
 // components/Analytics.js - Компонент для аналитических графиков и экспорта
 
-// Получаем компоненты Recharts из глобальной переменной
-const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-       XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } = window.Recharts;
+// Получаем компоненты из Recharts через глобальную переменную window
+const { 
+    ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area
+} = window.Recharts;
 
-// Получаем иконки из Lucide
-const { Download, FileText, Printer, AlertCircle, TrendingUp, Activity, Clock, AlertTriangle } = window.lucide;
+// Получаем иконки из lucide через глобальную переменную window
+const { 
+    Download, Printer, AlertCircle, TrendingUp, Activity, Clock, AlertTriangle 
+} = window.lucide;
 
-const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportReport }) => {
-  const COLORS = {
-    repair: '#ef4444',
-    operation: '#22c55e',
-    warning: '#f59e0b',
-    error: '#dc2626',
-    success: '#16a34a',
-    neutral: '#6b7280',
-    chart: {
-      primary: '#3b82f6',
-      secondary: '#10b981',
-      tertiary: '#f59e0b',
-      quaternary: '#8b5cf6'
+// Определяем палитру цветов для графиков
+const COLORS = {
+    repair: '#FF8042',
+    stop: '#FF0000',
+    work: '#00C49F',
+    preparation: '#0088FE',
+    pouring: '#FFBB28',
+    info: '#8884d8',
+    default: '#8884d8'
+};
+
+// Делаем компонент Analytics доступным глобально
+window.Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportReport }) => {
+    // Проверка наличия необходимых данных
+    if (!equipmentStats || !eventTypeStats || !timelineData) {
+        return (
+            <div className="error-state">
+                <AlertCircle size={24} className="text-red-500" />
+                <p>Отсутствуют необходимые данные для отображения</p>
+            </div>
+        );
     }
-  };
-  
-  // Назначаем специфические цвета для типов событий
-  const getEventTypeColor = (name) => {
-    switch(name) {
-      case 'Ремонт': return COLORS.repair;
-      case 'Работа': return COLORS.operation;
-      case 'Предупреждение': return COLORS.warning;
-      case 'Ошибка': return COLORS.error;
-      default: return COLORS.neutral;
-    }
-  };
-  
-  // Обработка ошибок при отсутствии данных
-  if (!equipmentStats || !eventTypeStats || !timelineData) {
-    return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-center gap-2 text-red-600">
-          <AlertCircle className="w-5 h-5" />
-          <h3 className="text-lg font-medium">Ошибка загрузки данных</h3>
+
+    // Функция для определения цвета в зависимости от типа события
+    const getEventTypeColor = (name) => {
+        switch(name) {
+            case 'Ремонт': return COLORS.repair;
+            case 'Остановка': return COLORS.stop;
+            case 'Работа': return COLORS.work;
+            case 'Подготовка': return COLORS.preparation;
+            case 'Заливка': return COLORS.pouring;
+            default: return COLORS.info;
+        }
+    };
+
+    // Компонент графика типов событий
+    const EventTypeChart = () => (
+        <div className="card">
+            <h2 className="card-title">Типы событий</h2>
+            <div className="chart-container">
+                <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                        <Pie
+                            data={eventTypeStats}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            nameKey="name"
+                            label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                            {eventTypeStats.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={getEventTypeColor(entry.name)} />
+                            ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
         </div>
-        <p className="mt-2 text-red-500">
-          Не удалось загрузить данные для анализа. Пожалуйста, проверьте подключение и попробуйте снова.
-        </p>
-      </div>
     );
-  }
 
-  // Форматирование данных для графиков
-  const pieData = Object.entries(eventTypeStats).map(([name, value]) => ({
-    name,
-    value
-  }));
-
-  const barData = Object.entries(equipmentStats).map(([name, value]) => ({
-    name,
-    value
-  }));
-
-  // Компонент для отображения экспорта
-  const ExportSection = () => (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Экспорт данных</h3>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <button
-          onClick={() => handleExportReport('pdf')}
-          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          <FileText className="w-4 h-4" />
-          PDF
-        </button>
-        <button
-          onClick={() => handleExportReport('excel')}
-          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-        >
-          <Download className="w-4 h-4" />
-          Excel
-        </button>
-        <button
-          onClick={() => handleExportReport('print')}
-          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-        >
-          <Printer className="w-4 h-4" />
-          Печать
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Аналитика</h2>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Распределение по типам событий</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getEventTypeColor(entry.name)} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+    // Компонент графика активности по оборудованию
+    const EquipmentActivityChart = () => (
+        <div className="card">
+            <h2 className="card-title">Активность по оборудованию</h2>
+            <div className="chart-container">
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                        data={equipmentStats.slice(0, 7)}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="name" type="category" />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="value" fill={COLORS.work} name="Количество событий" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
         </div>
+    );
 
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Активность оборудования</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill={COLORS.chart.primary} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+    // Компонент графика активности по времени
+    const TimelineChart = () => (
+        <div className="card lg:col-span-2">
+            <h2 className="card-title">Активность по времени</h2>
+            <div className="chart-container">
+                <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart
+                        data={timelineData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Area type="monotone" dataKey="Ремонт" stackId="1" stroke={COLORS.repair} fill={COLORS.repair} />
+                        <Area type="monotone" dataKey="Остановка" stackId="1" stroke={COLORS.stop} fill={COLORS.stop} />
+                        <Area type="monotone" dataKey="Работа" stackId="1" stroke={COLORS.work} fill={COLORS.work} />
+                        <Area type="monotone" dataKey="Подготовка" stackId="1" stroke={COLORS.preparation} fill={COLORS.preparation} />
+                        <Area type="monotone" dataKey="Заливка" stackId="1" stroke={COLORS.pouring} fill={COLORS.pouring} />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
         </div>
+    );
 
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Активность по времени</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Ремонт" stroke={COLORS.repair} />
-                <Line type="monotone" dataKey="Работа" stroke={COLORS.operation} />
-                <Line type="monotone" dataKey="Предупреждение" stroke={COLORS.warning} />
-                <Line type="monotone" dataKey="Ошибка" stroke={COLORS.error} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+    // Компонент экспорта
+    const ExportSection = () => (
+        <div className="card lg:col-span-2">
+            <div className="card-header">
+                <h2 className="card-title">Экспорт аналитики</h2>
+                <div className="flex space-x-2">
+                    <button 
+                        className="btn btn-primary flex items-center space-x-2"
+                        onClick={() => handleExportReport('pdf')}
+                    >
+                        <Download size={16} />
+                        <span>Экспорт PDF</span>
+                    </button>
+                    <button 
+                        className="btn btn-success flex items-center space-x-2"
+                        onClick={() => handleExportReport('excel')}
+                    >
+                        <Download size={16} />
+                        <span>Экспорт Excel</span>
+                    </button>
+                    <button 
+                        className="btn btn-secondary flex items-center space-x-2"
+                        onClick={() => handleExportReport('print')}
+                    >
+                        <Printer size={16} />
+                        <span>Печать</span>
+                    </button>
+                </div>
+            </div>
+            <p className="text-gray-600 mt-4">
+                Экспортируйте данные аналитики для презентаций и отчетов. Включает все графики, статистику и рекомендации.
+            </p>
         </div>
+    );
 
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Простой оборудования</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="Простой" fill={COLORS.chart.tertiary} stroke={COLORS.chart.tertiary} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <EventTypeChart />
+                <EquipmentActivityChart />
+                <TimelineChart />
+                <ExportSection />
+            </div>
         </div>
-      </div>
-
-      <ExportSection />
-    </div>
-  );
+    );
 };
