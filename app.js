@@ -32,7 +32,7 @@ if (!window.lucide) {
 
 // Основной компонент приложения
 const App = () => {
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useCallback } = React;
   
   // Состояние приложения
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -42,215 +42,268 @@ const App = () => {
   const [filterOptions, setFilterOptions] = useState({
     equipment: '',
     eventType: '',
-    dateFrom: '',
-    dateTo: '',
+    startDate: '',
+    endDate: '',
     searchText: ''
   });
   const [equipmentStats, setEquipmentStats] = useState([]);
-  const [eventTypeStats, setEventTypeStats] = useState([]);
+  const [eventTypeStats, setEventTypeStats] = useState({});
   const [timelineData, setTimelineData] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [apiKeys, setApiKeys] = useState({
-    openai: localStorage.getItem('apiKey_openai') || '',
-    anthropic: localStorage.getItem('apiKey_anthropic') || '',
-    cohere: localStorage.getItem('apiKey_cohere') || ''
+    openai: '',
+    anthropic: '',
+    cohere: ''
   });
+  const [analysisSettings, setAnalysisSettings] = useState({
+    updateInterval: 5,
+    autoRecommendations: false,
+    notifications: {
+      email: false,
+      telegram: false
+    },
+    historyRetention: '30'
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
-  // Для демонстрации загружаем пример данных при монтировании компонента
+  // Загрузка сохраненных данных при монтировании
   useEffect(() => {
     try {
-      setLogData(demoLogData);
-      handleAnalyzeData(demoLogData);
+      const savedApiKeys = localStorage.getItem('apiKeys');
+      const savedAnalysisSettings = localStorage.getItem('analysisSettings');
+      
+      if (savedApiKeys) {
+        setApiKeys(JSON.parse(savedApiKeys));
+      }
+      if (savedAnalysisSettings) {
+        setAnalysisSettings(JSON.parse(savedAnalysisSettings));
+      }
     } catch (error) {
-      console.error('Ошибка при загрузке демо-данных:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка:</h3><p>' + error.message + '</p>';
+      console.error('Ошибка при загрузке сохраненных данных:', error);
+      setError('Не удалось загрузить сохраненные настройки');
     }
   }, []);
   
-  // Парсинг и анализ данных
-  const handleAnalyzeData = (inputData) => {
+  // Обработчики событий
+  const handleLogDataChange = useCallback((data) => {
+    setLogData(data);
     try {
-      const lines = inputData.split('\n').filter(line => line.trim());
-      const parsed = lines.map(parseLogEntry).filter(entry => entry !== null);
-      
+      const parsed = parseLogData(data);
       setParsedData(parsed);
       setFilteredData(parsed);
-      
-      // Анализируем данные для статистики и графиков
-      const stats = analyzeData(parsed);
-      
-      setEquipmentStats(stats.equipmentStats);
-      setEventTypeStats(stats.eventTypeStats);
-      setTimelineData(stats.timelineData);
-      
-      // Генерация рекомендаций
-      const recs = generateRecommendations(parsed);
-      setRecommendations(recs);
+      updateStats(parsed);
     } catch (error) {
-      console.error('Ошибка при анализе данных:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка при анализе данных:</h3><p>' + error.message + '</p>';
+      console.error('Ошибка при обработке данных журнала:', error);
+      setError('Ошибка при обработке данных журнала');
     }
-  };
+  }, []);
   
-  // Обработчик изменения текста лога
-  const handleLogDataChange = (e) => {
-    setLogData(e.target.value);
-  };
+  const handleFilterChange = useCallback((key, value) => {
+    setFilterOptions(prev => ({ ...prev, [key]: value }));
+  }, []);
   
-  // Изменение значения фильтра
-  const handleFilterChange = (name, value) => {
-    setFilterOptions(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  // Применение фильтров
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     try {
-      const filtered = applyFiltersToData(parsedData, filterOptions);
+      const filtered = parsedData.filter(item => {
+        const matchesEquipment = !filterOptions.equipment || item.equipment === filterOptions.equipment;
+        const matchesEventType = !filterOptions.eventType || item.eventType === filterOptions.eventType;
+        const matchesDate = (!filterOptions.startDate || new Date(item.timestamp) >= new Date(filterOptions.startDate)) &&
+                          (!filterOptions.endDate || new Date(item.timestamp) <= new Date(filterOptions.endDate));
+        const matchesSearch = !filterOptions.searchText || 
+            item.description.toLowerCase().includes(filterOptions.searchText.toLowerCase());
+        
+        return matchesEquipment && matchesEventType && matchesDate && matchesSearch;
+      });
       setFilteredData(filtered);
     } catch (error) {
       console.error('Ошибка при применении фильтров:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка при фильтрации:</h3><p>' + error.message + '</p>';
+      setError('Ошибка при применении фильтров');
     }
-  };
+  }, [parsedData, filterOptions]);
   
-  // Сброс фильтров
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilterOptions({
       equipment: '',
       eventType: '',
-      dateFrom: '',
-      dateTo: '',
+      startDate: '',
+      endDate: '',
       searchText: ''
     });
     setFilteredData(parsedData);
-  };
+  }, [parsedData]);
   
-  // Сохранение настроек API ключей
-  const handleSaveApiKeys = () => {
+  const handleSaveApiKeys = useCallback(async () => {
     try {
-      localStorage.setItem('apiKey_openai', apiKeys.openai || '');
-      localStorage.setItem('apiKey_anthropic', apiKeys.anthropic || '');
-      localStorage.setItem('apiKey_cohere', apiKeys.cohere || '');
-      
-      // Показываем уведомление об успешном сохранении
-      const notification = document.createElement('div');
-      notification.className = 'notification success';
-      notification.textContent = 'API ключи успешно сохранены';
-      document.body.appendChild(notification);
-      
-      // Удаляем уведомление через 3 секунды
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
+      setIsLoading(true);
+      localStorage.setItem('apiKeys', JSON.stringify(apiKeys));
+      setError(null);
     } catch (error) {
       console.error('Ошибка при сохранении API ключей:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка при сохранении настроек:</h3><p>' + error.message + '</p>';
+      setError('Не удалось сохранить API ключи');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [apiKeys]);
   
-  // Экспорт отчета
-  const handleExportReport = (format) => {
+  const handleSaveAnalysisSettings = useCallback(async () => {
     try {
-      exportReport(format);
+      setIsLoading(true);
+      localStorage.setItem('analysisSettings', JSON.stringify(analysisSettings));
+      setError(null);
     } catch (error) {
-      console.error('Ошибка при экспорте отчета:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка при экспорте:</h3><p>' + error.message + '</p>';
+      console.error('Ошибка при сохранении настроек анализа:', error);
+      setError('Не удалось сохранить настройки анализа');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [analysisSettings]);
   
-  // Генерация расширенных рекомендаций с использованием API нейросети
-  const handleGenerateAIRecommendations = async () => {
+  const handleGenerateAIRecommendations = useCallback(async () => {
     try {
-      // Проверяем наличие API ключей
+      setIsLoading(true);
       if (!apiKeys.openai && !apiKeys.anthropic && !apiKeys.cohere) {
-        throw new Error('Необходимо указать хотя бы один API ключ в настройках');
+        throw new Error('Необходимо указать хотя бы один API ключ');
       }
       
-      // Показываем индикатор загрузки
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.className = 'loading-indicator';
-      loadingIndicator.textContent = 'Генерация рекомендаций...';
-      document.body.appendChild(loadingIndicator);
-      
-      // Генерируем рекомендации
-      const aiRecs = await generateAIRecommendations(apiKeys, parsedData);
-      
-      // Обновляем список рекомендаций
-      setRecommendations(prev => [...prev, ...aiRecs]);
-      
-      // Удаляем индикатор загрузки
-      loadingIndicator.remove();
-      
-      // Показываем уведомление об успехе
-      const notification = document.createElement('div');
-      notification.className = 'notification success';
-      notification.textContent = 'Рекомендации успешно сгенерированы';
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
+      // Здесь будет логика генерации рекомендаций
+      const newRecommendations = await generateRecommendations(parsedData);
+      setRecommendations(newRecommendations);
+      setError(null);
     } catch (error) {
       console.error('Ошибка при генерации рекомендаций:', error);
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = 
-          '<h3>Произошла ошибка при генерации рекомендаций:</h3><p>' + error.message + '</p>';
+      setError('Не удалось сгенерировать рекомендации');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [parsedData, apiKeys]);
   
-  return (
-    <div>
-      {/* Верхняя навигационная панель */}
-      <header>
-        <div className="header-container">
-          <h1 className="app-title">ЗаводАналитикс</h1>
-          <div className="nav-buttons">
-            <button 
-              className={`nav-button ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              Дашборд
-            </button>
-            <button 
-              className={`nav-button ${activeTab === 'log' ? 'active' : ''}`}
-              onClick={() => setActiveTab('log')}
-            >
-              Журнал
-            </button>
-            <button 
-              className={`nav-button ${activeTab === 'analytics' ? 'active' : ''}`}
-              onClick={() => setActiveTab('analytics')}
-            >
-              Аналитика
-            </button>
-            <button 
-              className={`nav-button ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => setActiveTab('settings')}
-            >
-              Настройки
-            </button>
+  const handleExportReport = useCallback(async (format) => {
+    try {
+      setIsLoading(true);
+      // Здесь будет логика экспорта отчета
+      await exportReport(format, {
+        parsedData,
+        equipmentStats,
+        eventTypeStats,
+        timelineData,
+        recommendations
+      });
+      setError(null);
+    } catch (error) {
+      console.error('Ошибка при экспорте отчета:', error);
+      setError('Не удалось экспортировать отчет');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [parsedData, equipmentStats, eventTypeStats, timelineData, recommendations]);
+  
+  // Вспомогательные функции
+  const updateStats = useCallback((data) => {
+    try {
+      // Обновление статистики по оборудованию
+      const equipmentStats = calculateEquipmentStats(data);
+      setEquipmentStats(equipmentStats);
+
+      // Обновление статистики по типам событий
+      const eventTypeStats = calculateEventTypeStats(data);
+      setEventTypeStats(eventTypeStats);
+
+      // Обновление данных для временной шкалы
+      const timelineData = calculateTimelineData(data);
+      setTimelineData(timelineData);
+    } catch (error) {
+      console.error('Ошибка при обновлении статистики:', error);
+      setError('Ошибка при обновлении статистики');
+    }
+  }, []);
+  
+  // Компонент навигации
+  const Navigation = () => (
+    <nav className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <h1 className="text-xl font-bold text-gray-900">ЗаводАналитикс</h1>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`${
+                  activeTab === 'dashboard'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                Панель управления
+              </button>
+              <button
+                onClick={() => setActiveTab('log')}
+                className={`${
+                  activeTab === 'log'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <FileText className="w-5 h-5 mr-2" />
+                Журнал
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`${
+                  activeTab === 'analytics'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <BarChart2 className="w-5 h-5 mr-2" />
+                Аналитика
+              </button>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`${
+                  activeTab === 'settings'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Настройки
+              </button>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
+    </nav>
+  );
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
       
-      {/* Основное содержимое */}
-      <main>
-        {/* Условный рендеринг активного компонента */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-600">
+              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              <h3 class="text-lg font-medium">Ошибка</h3>
+            </div>
+            <p className="mt-2 text-red-500">{error}</p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+        )}
+
         {activeTab === 'dashboard' && (
-          <Dashboard 
+          <window.Dashboard 
             parsedData={parsedData}
             equipmentStats={equipmentStats}
             eventTypeStats={eventTypeStats}
@@ -261,7 +314,7 @@ const App = () => {
         )}
         
         {activeTab === 'log' && (
-          <LogViewer 
+          <window.LogViewer 
             logData={logData}
             parsedData={parsedData}
             filteredData={filteredData}
@@ -270,12 +323,12 @@ const App = () => {
             handleFilterChange={handleFilterChange}
             applyFilters={applyFilters}
             resetFilters={resetFilters}
-            handleAnalyzeData={handleAnalyzeData}
+            handleAnalyzeData={handleGenerateAIRecommendations}
           />
         )}
         
         {activeTab === 'analytics' && (
-          <Analytics 
+          <window.Analytics 
             equipmentStats={equipmentStats}
             eventTypeStats={eventTypeStats}
             timelineData={timelineData}
@@ -284,10 +337,13 @@ const App = () => {
         )}
         
         {activeTab === 'settings' && (
-          <Settings 
+          <window.Settings 
             apiKeys={apiKeys}
             setApiKeys={setApiKeys}
             handleSaveApiKeys={handleSaveApiKeys}
+            analysisSettings={analysisSettings}
+            setAnalysisSettings={setAnalysisSettings}
+            handleSaveAnalysisSettings={handleSaveAnalysisSettings}
           />
         )}
       </main>
