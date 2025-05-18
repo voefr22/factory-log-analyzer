@@ -5,6 +5,31 @@ if (window.lucide && window.lucide.createIcons) {
   window.lucide.createIcons();
 }
 
+// Проверка наличия и доступности библиотек
+if (!window.React) {
+  console.error('React не загружен!');
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека React не загружена</p>';
+}
+
+if (!window.ReactDOM) {
+  console.error('ReactDOM не загружен!');
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека ReactDOM не загружена</p>';
+}
+
+if (!window.Recharts) {
+  console.error('Recharts не загружен!');
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека Recharts не загружена</p>';
+}
+
+if (!window.lucide) {
+  console.error('Lucide не загружен!');
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека Lucide не загружена</p>';
+}
+
 // Основной компонент приложения
 const App = () => {
   const { useState, useEffect } = React;
@@ -33,28 +58,42 @@ const App = () => {
   
   // Для демонстрации загружаем пример данных при монтировании компонента
   useEffect(() => {
-    setLogData(demoLogData);
-    handleAnalyzeData(demoLogData);
+    try {
+      setLogData(demoLogData);
+      handleAnalyzeData(demoLogData);
+    } catch (error) {
+      console.error('Ошибка при загрузке демо-данных:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка:</h3><p>' + error.message + '</p>';
+    }
   }, []);
   
   // Парсинг и анализ данных
   const handleAnalyzeData = (inputData) => {
-    const lines = inputData.split('\n').filter(line => line.trim());
-    const parsed = lines.map(parseLogEntry).filter(entry => entry !== null);
-    
-    setParsedData(parsed);
-    setFilteredData(parsed);
-    
-    // Анализируем данные для статистики и графиков
-    const stats = analyzeData(parsed);
-    
-    setEquipmentStats(stats.equipmentStats);
-    setEventTypeStats(stats.eventTypeStats);
-    setTimelineData(stats.timelineData);
-    
-    // Генерация рекомендаций
-    const recs = generateRecommendations(parsed);
-    setRecommendations(recs);
+    try {
+      const lines = inputData.split('\n').filter(line => line.trim());
+      const parsed = lines.map(parseLogEntry).filter(entry => entry !== null);
+      
+      setParsedData(parsed);
+      setFilteredData(parsed);
+      
+      // Анализируем данные для статистики и графиков
+      const stats = analyzeData(parsed);
+      
+      setEquipmentStats(stats.equipmentStats);
+      setEventTypeStats(stats.eventTypeStats);
+      setTimelineData(stats.timelineData);
+      
+      // Генерация рекомендаций
+      const recs = generateRecommendations(parsed);
+      setRecommendations(recs);
+    } catch (error) {
+      console.error('Ошибка при анализе данных:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка при анализе данных:</h3><p>' + error.message + '</p>';
+    }
   };
   
   // Обработчик изменения текста лога
@@ -72,8 +111,15 @@ const App = () => {
   
   // Применение фильтров
   const applyFilters = () => {
-    const filtered = applyFiltersToData(parsedData, filterOptions);
-    setFilteredData(filtered);
+    try {
+      const filtered = applyFiltersToData(parsedData, filterOptions);
+      setFilteredData(filtered);
+    } catch (error) {
+      console.error('Ошибка при применении фильтров:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка при фильтрации:</h3><p>' + error.message + '</p>';
+    }
   };
   
   // Сброс фильтров
@@ -85,29 +131,84 @@ const App = () => {
       dateTo: '',
       searchText: ''
     });
-    
     setFilteredData(parsedData);
   };
   
   // Сохранение настроек API ключей
   const handleSaveApiKeys = () => {
-    localStorage.setItem('apiKey_openai', apiKeys.openai || '');
-    localStorage.setItem('apiKey_anthropic', apiKeys.anthropic || '');
-    localStorage.setItem('apiKey_cohere', apiKeys.cohere || '');
-    
-    alert('API ключи сохранены');
+    try {
+      localStorage.setItem('apiKey_openai', apiKeys.openai || '');
+      localStorage.setItem('apiKey_anthropic', apiKeys.anthropic || '');
+      localStorage.setItem('apiKey_cohere', apiKeys.cohere || '');
+      
+      // Показываем уведомление об успешном сохранении
+      const notification = document.createElement('div');
+      notification.className = 'notification success';
+      notification.textContent = 'API ключи успешно сохранены';
+      document.body.appendChild(notification);
+      
+      // Удаляем уведомление через 3 секунды
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    } catch (error) {
+      console.error('Ошибка при сохранении API ключей:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка при сохранении настроек:</h3><p>' + error.message + '</p>';
+    }
   };
   
   // Экспорт отчета
   const handleExportReport = (format) => {
-    exportReport(format);
+    try {
+      exportReport(format);
+    } catch (error) {
+      console.error('Ошибка при экспорте отчета:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка при экспорте:</h3><p>' + error.message + '</p>';
+    }
   };
   
   // Генерация расширенных рекомендаций с использованием API нейросети
-  const handleGenerateAIRecommendations = () => {
-    generateAIRecommendations(apiKeys, parsedData, (aiRecs) => {
+  const handleGenerateAIRecommendations = async () => {
+    try {
+      // Проверяем наличие API ключей
+      if (!apiKeys.openai && !apiKeys.anthropic && !apiKeys.cohere) {
+        throw new Error('Необходимо указать хотя бы один API ключ в настройках');
+      }
+      
+      // Показываем индикатор загрузки
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'loading-indicator';
+      loadingIndicator.textContent = 'Генерация рекомендаций...';
+      document.body.appendChild(loadingIndicator);
+      
+      // Генерируем рекомендации
+      const aiRecs = await generateAIRecommendations(apiKeys, parsedData);
+      
+      // Обновляем список рекомендаций
       setRecommendations(prev => [...prev, ...aiRecs]);
-    });
+      
+      // Удаляем индикатор загрузки
+      loadingIndicator.remove();
+      
+      // Показываем уведомление об успехе
+      const notification = document.createElement('div');
+      notification.className = 'notification success';
+      notification.textContent = 'Рекомендации успешно сгенерированы';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    } catch (error) {
+      console.error('Ошибка при генерации рекомендаций:', error);
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 
+          '<h3>Произошла ошибка при генерации рекомендаций:</h3><p>' + error.message + '</p>';
+    }
   };
   
   return (
@@ -147,7 +248,7 @@ const App = () => {
       
       {/* Основное содержимое */}
       <main>
-        {/* Панель дашборда */}
+        {/* Условный рендеринг активного компонента */}
         {activeTab === 'dashboard' && (
           <Dashboard 
             parsedData={parsedData}
@@ -159,7 +260,6 @@ const App = () => {
           />
         )}
         
-        {/* Вкладка журнала */}
         {activeTab === 'log' && (
           <LogViewer 
             logData={logData}
@@ -174,7 +274,6 @@ const App = () => {
           />
         )}
         
-        {/* Вкладка аналитики */}
         {activeTab === 'analytics' && (
           <Analytics 
             equipmentStats={equipmentStats}
@@ -184,7 +283,6 @@ const App = () => {
           />
         )}
         
-        {/* Вкладка настроек */}
         {activeTab === 'settings' && (
           <Settings 
             apiKeys={apiKeys}
@@ -197,5 +295,12 @@ const App = () => {
   );
 };
 
-// Рендеринг приложения в DOM
-ReactDOM.render(<App />, document.getElementById('root'));
+// Безопасный рендеринг приложения с обработкой ошибок
+try {
+  ReactDOM.render(<App />, document.getElementById('root'));
+} catch (error) {
+  console.error('Ошибка при рендеринге приложения:', error);
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error').innerHTML = 
+      '<h3>Произошла ошибка при рендеринге приложения:</h3><p>' + error.message + '</p>';
+}
