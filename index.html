@@ -24,7 +24,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.7.2/Recharts.min.js"></script>
     
     <!-- Подключаем Lucide для иконок -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Глобальное объявление lucide, чтобы он был доступен везде
+        window.lucide = lucide;
+    </script>
     
     <!-- Обработка ошибок -->
     <script>
