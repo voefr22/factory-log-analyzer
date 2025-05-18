@@ -9,6 +9,8 @@
     
     <!-- Предзагрузка критических ресурсов -->
     <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="libs/react.production.min.js" as="script">
+    <link rel="preload" href="libs/react-dom.production.min.js" as="script">
     <link rel="preload" href="utils.js" as="script">
     
     <!-- Стили -->
@@ -41,22 +43,12 @@
         </div>
     </div>
     
-    <!-- Библиотеки с проверкой целостности -->
-    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" 
-            integrity="sha384-8iBk79BHydB4HKr0zPL0cVvQn1Dp6cUF60L8aX8X2ig8KNB4LN0eP6L/q9gKD0Uml"
-            crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"
-            integrity="sha384-62C7m7miDiuqR81U2o3V2bXkQhhBG3L/kWQpW5Fg3YfV8sz1i8I8aLtq8jfkZi4H"
-            crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/recharts@2.7.2/umd/Recharts.js"
-            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
-            crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/lucide@latest"
-            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
-            crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"
-            integrity="sha384-9Xm7Uz8K8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4jqK8l4j"
-            crossorigin="anonymous"></script>
+    <!-- Локальные библиотеки -->
+    <script src="libs/react.production.min.js"></script>
+    <script src="libs/react-dom.production.min.js"></script>
+    <script src="libs/Recharts.js"></script>
+    <script src="libs/lucide.min.js"></script>
+    <script src="libs/babel.min.js"></script>
     
     <!-- Глобальные объекты и инициализация -->
     <script>
@@ -93,32 +85,52 @@
             errorContainer.style.display = 'block';
         }
 
-        // Инициализация приложения
-        window.initApp = function() {
-            console.log('Инициализация приложения...');
-            
-            // Проверка наличия библиотек
+        // Проверка загрузки библиотек
+        function checkLibraries() {
             const requiredLibs = {
                 'React': window.React,
                 'ReactDOM': window.ReactDOM,
                 'Recharts': window.Recharts,
-                'lucide': window.lucide
+                'lucide': window.lucide,
+                'Babel': window.Babel
             };
+            
+            console.log('Статус загрузки библиотек:', requiredLibs);
             
             const missingLibs = Object.entries(requiredLibs)
                 .filter(([_, lib]) => !lib)
                 .map(([name]) => name);
             
             if (missingLibs.length > 0) {
-                throw new Error(`Отсутствуют необходимые библиотеки: ${missingLibs.join(', ')}`);
+                throw new Error(
+                    `Не удалось загрузить следующие библиотеки:\n` +
+                    missingLibs.map(lib => `- ${lib}`).join('\n') +
+                    `\n\nПожалуйста, проверьте, что все библиотеки находятся в директории libs/`
+                );
             }
             
-            // Инициализация иконок
-            if (window.lucide?.createIcons) {
-                window.lucide.createIcons();
+            return true;
+        }
+
+        // Инициализация приложения
+        window.initApp = function() {
+            try {
+                console.log('Инициализация приложения...');
+                
+                // Проверка библиотек
+                checkLibraries();
+                
+                // Инициализация иконок
+                if (window.lucide?.createIcons) {
+                    window.lucide.createIcons();
+                }
+                
+                console.log('Приложение инициализировано успешно');
+            } catch (error) {
+                console.error('Ошибка при инициализации:', error);
+                showError('Ошибка инициализации', error.message);
+                throw error; // Пробрасываем ошибку дальше
             }
-            
-            console.log('Приложение инициализировано успешно');
         };
     </script>
     
@@ -126,7 +138,11 @@
     <script src="utils.js"></script>
     
     <!-- Компоненты приложения -->
-    <script type="text/babel" src="app.js"></script>
+    <script type="text/babel" data-presets="react" src="components/Dashboard.js"></script>
+    <script type="text/babel" data-presets="react" src="components/LogViewer.js"></script>
+    <script type="text/babel" data-presets="react" src="components/Analytics.js"></script>
+    <script type="text/babel" data-presets="react" src="components/Settings.js"></script>
+    <script type="text/babel" data-presets="react" src="app.js"></script>
     
     <!-- Инициализация после загрузки DOM -->
     <script>
