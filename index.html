@@ -7,17 +7,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">Загрузка приложения...</div>
     
-    <!-- Подключаем React и ReactDOM -->
+    <!-- Сообщение об ошибке -->
+    <div id="error" style="display:none; color:red; margin:20px;"></div>
+    
+    <!-- Подключаем React и зависимости -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
     
     <!-- Подключаем Recharts для графиков -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.7.2/Recharts.min.js"></script>
     
     <!-- Подключаем Lucide для иконок -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    
+    <!-- Обработка ошибок -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Ошибка:', message, 'в', source, ':', lineno);
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = 
+                '<h3>Произошла ошибка:</h3><p>' + message + '</p><p>Файл: ' + source + '</p><p>Строка: ' + lineno + '</p>';
+            return true;
+        };
+    </script>
     
     <!-- Подключаем наши скрипты -->
     <script src="utils.js"></script>
