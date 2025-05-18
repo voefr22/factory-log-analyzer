@@ -1,5 +1,12 @@
 // components/Dashboard.js - Компонент дашборда
 
+// Определяем палитру цветов для графиков
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF0000', '#82ca9d'];
+
+// Извлекаем компоненты из библиотек Recharts и Lucide
+const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, 
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
+
 const Dashboard = ({ parsedData, equipmentStats, eventTypeStats, timelineData, recommendations, handleGenerateAIRecommendations }) => {
   const { AlertTriangle, TrendingUp, Database, Clock } = lucide;
   
