@@ -3,7 +3,7 @@
 // Извлекаем компоненты из библиотек Recharts и Lucide
 const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
       XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
-const { Download, Printer } = lucide;
+const { Download, Printer } = window.lucide;
 
 const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportReport }) => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF0000', '#82ca9d'];
@@ -142,7 +142,6 @@ const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportR
           </div>
           <p className="text-gray-500 mt-2 text-sm">* На основе ИИ-анализа. Требуются дополнительные данные для точного прогноза.</p>
         </div>
-        
         {/* Экспорт отчета */}
         <div className="card lg:col-span-2">
           <div className="card-header">
