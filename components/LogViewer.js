@@ -1,8 +1,9 @@
 // components/LogViewer.js - Компонент для просмотра и фильтрации логов
 
-const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLogDataChange, handleFilterChange, applyFilters, resetFilters }) => {
-  const { Search, Filter, ArrowUpDown } = lucide;
-  
+// Извлекаем компоненты из библиотеки Lucide
+const { Search, Filter, ArrowUpDown } = lucide;
+
+const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLogDataChange, handleFilterChange, applyFilters, resetFilters, handleAnalyzeData }) => {
   return (
     <div className="space-y-6">
       <div className="card">
