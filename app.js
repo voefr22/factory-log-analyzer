@@ -5,30 +5,14 @@ if (window.lucide && window.lucide.createIcons) {
   window.lucide.createIcons();
 }
 
-// Проверка наличия и доступности библиотек
-if (!window.React) {
-  console.error('React не загружен!');
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека React не загружена</p>';
-}
-
-if (!window.ReactDOM) {
-  console.error('ReactDOM не загружен!');
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека ReactDOM не загружена</p>';
-}
-
-if (!window.Recharts) {
-  console.error('Recharts не загружен!');
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека Recharts не загружена</p>';
-}
-
-if (!window.lucide) {
-  console.error('Lucide не загружен!');
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = '<h3>Произошла ошибка:</h3><p>Библиотека Lucide не загружена</p>';
-}
+// Сообщение об инициализации приложения
+console.log('Инициализация приложения...');
+console.log('Проверка наличия необходимых библиотек:');
+console.log('- React:', !!window.React);
+console.log('- ReactDOM:', !!window.ReactDOM);
+console.log('- Recharts:', !!window.Recharts);
+console.log('- lucide:', !!window.lucide);
+console.log('- Babel:', !!window.Babel);
 
 // Основной компонент приложения
 const App = () => {
@@ -42,29 +26,29 @@ const App = () => {
   const [filterOptions, setFilterOptions] = useState({
     equipment: '',
     eventType: '',
-    startDate: '',
-    endDate: '',
+    dateFrom: '',
+    dateTo: '',
     searchText: ''
   });
   const [equipmentStats, setEquipmentStats] = useState([]);
-  const [eventTypeStats, setEventTypeStats] = useState({});
+  const [eventTypeStats, setEventTypeStats] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [apiKeys, setApiKeys] = useState({
-    openai: '',
-    anthropic: '',
-    cohere: ''
+    openai: localStorage.getItem('apiKey_openai') || '',
+    anthropic: localStorage.getItem('apiKey_anthropic') || '',
+    cohere: localStorage.getItem('apiKey_cohere') || ''
   });
   const [analysisSettings, setAnalysisSettings] = useState({
-    updateInterval: 5,
-    autoRecommendations: false,
+    updateInterval: parseInt(localStorage.getItem('updateInterval')) || 5,
+    autoRecommendations: localStorage.getItem('autoRecommendations') === 'true',
     notifications: {
-      email: false,
-      telegram: false
+      email: localStorage.getItem('notifyEmail') === 'true',
+      telegram: localStorage.getItem('notifyTelegram') === 'true'
     },
-    historyRetention: '30'
+    historyRetention: parseInt(localStorage.getItem('historyRetention')) || 30
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   // Загрузка сохраненных данных при монтировании
@@ -85,40 +69,85 @@ const App = () => {
     }
   }, []);
   
-  // Обработчики событий
-  const handleLogDataChange = useCallback((data) => {
-    setLogData(data);
-    try {
-      const parsed = parseLogData(data);
-      setParsedData(parsed);
-      setFilteredData(parsed);
-      updateStats(parsed);
-    } catch (error) {
-      console.error('Ошибка при обработке данных журнала:', error);
-      setError('Ошибка при обработке данных журнала');
-    }
+  // Загрузка демо-данных
+  useEffect(() => {
+    const loadDemoData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('Загрузка демо-данных...');
+        setLogData(demoLogData);
+        await handleAnalyzeData(demoLogData);
+      } catch (error) {
+        console.error('Ошибка при загрузке демо-данных:', error);
+        setError({
+          title: 'Ошибка при загрузке демо-данных',
+          message: error.message
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDemoData();
   }, []);
   
-  const handleFilterChange = useCallback((key, value) => {
-    setFilterOptions(prev => ({ ...prev, [key]: value }));
+  // Функции-обработчики
+  const handleAnalyzeData = useCallback(async (inputData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Анализ данных
+      const parsed = parseLogData(inputData);
+      setParsedData(parsed);
+      
+      // Применяем текущие фильтры
+      const filtered = applyFiltersToData(parsed, filterOptions);
+      setFilteredData(filtered);
+      
+      // Обновляем статистику
+      const stats = calculateStats(parsed);
+      setEquipmentStats(stats.equipment);
+      setEventTypeStats(stats.eventTypes);
+      setTimelineData(stats.timeline);
+      
+      // Если включены автоматические рекомендации
+      if (analysisSettings.autoRecommendations) {
+        await handleGenerateAIRecommendations();
+      }
+    } catch (error) {
+      console.error('Ошибка при анализе данных:', error);
+      setError({
+        title: 'Ошибка при анализе данных',
+        message: error.message
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [filterOptions, analysisSettings.autoRecommendations]);
+  
+  const handleLogDataChange = useCallback((e) => {
+    setLogData(e.target.value);
+  }, []);
+  
+  const handleFilterChange = useCallback((name, value) => {
+    setFilterOptions(prev => ({
+      ...prev,
+      [name]: value
+    }));
   }, []);
   
   const applyFilters = useCallback(() => {
     try {
-      const filtered = parsedData.filter(item => {
-        const matchesEquipment = !filterOptions.equipment || item.equipment === filterOptions.equipment;
-        const matchesEventType = !filterOptions.eventType || item.eventType === filterOptions.eventType;
-        const matchesDate = (!filterOptions.startDate || new Date(item.timestamp) >= new Date(filterOptions.startDate)) &&
-                          (!filterOptions.endDate || new Date(item.timestamp) <= new Date(filterOptions.endDate));
-        const matchesSearch = !filterOptions.searchText || 
-            item.description.toLowerCase().includes(filterOptions.searchText.toLowerCase());
-        
-        return matchesEquipment && matchesEventType && matchesDate && matchesSearch;
-      });
+      const filtered = applyFiltersToData(parsedData, filterOptions);
       setFilteredData(filtered);
     } catch (error) {
       console.error('Ошибка при применении фильтров:', error);
-      setError('Ошибка при применении фильтров');
+      setError({
+        title: 'Ошибка при применении фильтров',
+        message: error.message
+      });
     }
   }, [parsedData, filterOptions]);
   
@@ -126,179 +155,123 @@ const App = () => {
     setFilterOptions({
       equipment: '',
       eventType: '',
-      startDate: '',
-      endDate: '',
+      dateFrom: '',
+      dateTo: '',
       searchText: ''
     });
     setFilteredData(parsedData);
   }, [parsedData]);
   
-  const handleSaveApiKeys = useCallback(async () => {
+  const handleSaveApiKeys = useCallback(() => {
     try {
-      setIsLoading(true);
-      localStorage.setItem('apiKeys', JSON.stringify(apiKeys));
-      setError(null);
+      localStorage.setItem('apiKey_openai', apiKeys.openai || '');
+      localStorage.setItem('apiKey_anthropic', apiKeys.anthropic || '');
+      localStorage.setItem('apiKey_cohere', apiKeys.cohere || '');
+      alert('API ключи сохранены');
     } catch (error) {
       console.error('Ошибка при сохранении API ключей:', error);
-      setError('Не удалось сохранить API ключи');
-    } finally {
-      setIsLoading(false);
+      setError({
+        title: 'Ошибка при сохранении API ключей',
+        message: error.message
+      });
     }
   }, [apiKeys]);
   
-  const handleSaveAnalysisSettings = useCallback(async () => {
+  const handleSaveAnalysisSettings = useCallback(() => {
     try {
-      setIsLoading(true);
-      localStorage.setItem('analysisSettings', JSON.stringify(analysisSettings));
-      setError(null);
+      localStorage.setItem('updateInterval', analysisSettings.updateInterval);
+      localStorage.setItem('autoRecommendations', analysisSettings.autoRecommendations);
+      localStorage.setItem('notifyEmail', analysisSettings.notifications.email);
+      localStorage.setItem('notifyTelegram', analysisSettings.notifications.telegram);
+      localStorage.setItem('historyRetention', analysisSettings.historyRetention);
+      alert('Настройки анализа сохранены');
     } catch (error) {
-      console.error('Ошибка при сохранении настроек анализа:', error);
-      setError('Не удалось сохранить настройки анализа');
-    } finally {
-      setIsLoading(false);
+      console.error('Ошибка при сохранении настроек:', error);
+      setError({
+        title: 'Ошибка при сохранении настроек',
+        message: error.message
+      });
     }
   }, [analysisSettings]);
   
-  const handleGenerateAIRecommendations = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      if (!apiKeys.openai && !apiKeys.anthropic && !apiKeys.cohere) {
-        throw new Error('Необходимо указать хотя бы один API ключ');
-      }
-      
-      // Здесь будет логика генерации рекомендаций
-      const newRecommendations = await generateRecommendations(parsedData);
-      setRecommendations(newRecommendations);
-      setError(null);
-    } catch (error) {
-      console.error('Ошибка при генерации рекомендаций:', error);
-      setError('Не удалось сгенерировать рекомендации');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [parsedData, apiKeys]);
-  
   const handleExportReport = useCallback(async (format) => {
     try {
-      setIsLoading(true);
-      // Здесь будет логика экспорта отчета
-      await exportReport(format, {
-        parsedData,
-        equipmentStats,
-        eventTypeStats,
-        timelineData,
-        recommendations
-      });
-      setError(null);
+      setLoading(true);
+      await exportReport(format);
     } catch (error) {
       console.error('Ошибка при экспорте отчета:', error);
-      setError('Не удалось экспортировать отчет');
+      setError({
+        title: 'Ошибка при экспорте отчета',
+        message: error.message
+      });
     } finally {
-      setIsLoading(false);
-    }
-  }, [parsedData, equipmentStats, eventTypeStats, timelineData, recommendations]);
-  
-  // Вспомогательные функции
-  const updateStats = useCallback((data) => {
-    try {
-      // Обновление статистики по оборудованию
-      const equipmentStats = calculateEquipmentStats(data);
-      setEquipmentStats(equipmentStats);
-
-      // Обновление статистики по типам событий
-      const eventTypeStats = calculateEventTypeStats(data);
-      setEventTypeStats(eventTypeStats);
-
-      // Обновление данных для временной шкалы
-      const timelineData = calculateTimelineData(data);
-      setTimelineData(timelineData);
-    } catch (error) {
-      console.error('Ошибка при обновлении статистики:', error);
-      setError('Ошибка при обновлении статистики');
+      setLoading(false);
     }
   }, []);
   
+  const handleGenerateAIRecommendations = useCallback(async () => {
+    try {
+      setLoading(true);
+      const aiRecs = await generateAIRecommendations(apiKeys, parsedData);
+      setRecommendations(prev => [...prev, ...aiRecs]);
+    } catch (error) {
+      console.error('Ошибка при генерации рекомендаций:', error);
+      setError({
+        title: 'Ошибка при генерации рекомендаций',
+        message: error.message
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [apiKeys, parsedData]);
+  
   // Компонент навигации
   const Navigation = () => (
-    <nav className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">ЗаводАналитикс</h1>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`${
-                  activeTab === 'dashboard'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-              >
-                <LayoutDashboard className="w-5 h-5 mr-2" />
-                Панель управления
-              </button>
-              <button
-                onClick={() => setActiveTab('log')}
-                className={`${
-                  activeTab === 'log'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-              >
-                <FileText className="w-5 h-5 mr-2" />
-                Журнал
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`${
-                  activeTab === 'analytics'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-              >
-                <BarChart2 className="w-5 h-5 mr-2" />
-                Аналитика
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`${
-                  activeTab === 'settings'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Настройки
-              </button>
-            </div>
-          </div>
+    <header>
+      <div className="header-container">
+        <h1 className="app-title">ЗаводАналитикс</h1>
+        <div className="nav-buttons">
+          {['dashboard', 'log', 'analytics', 'settings'].map(tab => (
+            <button 
+              key={tab}
+              className={`nav-button ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab === 'dashboard' ? 'Дашборд' :
+               tab === 'log' ? 'Журнал' :
+               tab === 'analytics' ? 'Аналитика' : 'Настройки'}
+            </button>
+          ))}
         </div>
       </div>
-    </nav>
+    </header>
   );
   
+  // Обработка ошибок
+  if (error) {
+    return (
+      <div className="error-container">
+        <h3>{error.title}</h3>
+        <p>{error.message}</p>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setError(null)}
+        >
+          Закрыть
+        </button>
+      </div>
+    );
+  }
+  
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       <Navigation />
       
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-600">
-              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-              <h3 class="text-lg font-medium">Ошибка</h3>
-            </div>
-            <p className="mt-2 text-red-500">{error}</p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      <main>
+        {loading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner" />
+            <p>Загрузка...</p>
           </div>
         )}
 
@@ -323,7 +296,7 @@ const App = () => {
             handleFilterChange={handleFilterChange}
             applyFilters={applyFilters}
             resetFilters={resetFilters}
-            handleAnalyzeData={handleGenerateAIRecommendations}
+            handleAnalyzeData={handleAnalyzeData}
           />
         )}
         
@@ -351,12 +324,40 @@ const App = () => {
   );
 };
 
-// Безопасный рендеринг приложения с обработкой ошибок
-try {
-  ReactDOM.render(<App />, document.getElementById('root'));
-} catch (error) {
-  console.error('Ошибка при рендеринге приложения:', error);
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = 
-      '<h3>Произошла ошибка при рендеринге приложения:</h3><p>' + error.message + '</p>';
-}
+// Рендеринг приложения после загрузки компонентов
+document.addEventListener('DOMContentLoaded', function() {
+  // Проверка наличия всех необходимых компонентов
+  const requiredComponents = ['Dashboard', 'LogViewer', 'Analytics', 'Settings'];
+  const missingComponents = requiredComponents.filter(comp => !window[comp]);
+  
+  if (missingComponents.length > 0) {
+    console.error('Ошибка: Не найдены следующие компоненты:', missingComponents);
+    const errorDiv = document.getElementById('error');
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.innerHTML = `
+        <h3>Ошибка: Не найдены следующие компоненты:</h3>
+        <ul>${missingComponents.map(comp => `<li>${comp}</li>`).join('')}</ul>
+        <p>Проверьте, что все файлы компонентов правильно загружены.</p>
+      `;
+    }
+    return;
+  }
+  
+  // Рендеринг приложения
+  try {
+    console.log('Рендеринг приложения...');
+    ReactDOM.render(<App />, document.getElementById('root'));
+    console.log('Приложение успешно отрендерено!');
+  } catch (error) {
+    console.error('Ошибка при рендеринге приложения:', error);
+    const errorDiv = document.getElementById('error');
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.innerHTML = `
+        <h3>Ошибка при рендеринге приложения:</h3>
+        <p>${error.message}</p>
+      `;
+    }
+  }
+});
