@@ -1,6 +1,6 @@
 // components/LogViewer.js - Компонент для просмотра и фильтрации логов
 
-// Извлекаем компоненты из библиотеки Lucide
+// Получаем иконки из глобальной переменной
 const { Search, Filter, ArrowUpDown } = window.lucide;
 
 const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLogDataChange, handleFilterChange, applyFilters, resetFilters, handleAnalyzeData }) => {
@@ -14,6 +14,7 @@ const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLog
             onChange={handleLogDataChange}
             className="form-textarea"
             placeholder="Вставьте журнал диспетчера здесь..."
+            rows={10}
           />
         </div>
         <div className="flex justify-end">
@@ -62,7 +63,6 @@ const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLog
                 onChange={(e) => handleFilterChange('equipment', e.target.value)}
               >
                 <option value="">Все</option>
-                {/* Создаем список уникального оборудования */}
                 {[...new Set(parsedData.map(item => item.equipment).filter(Boolean))].map(equip => (
                   <option key={equip} value={equip}>{equip}</option>
                 ))}
@@ -108,64 +108,56 @@ const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLog
           </div>
         </div>
         
-        <div className="table-container">
+        <div className="table-container mt-4">
           <table className="min-w-full bg-white">
             <thead className="bg-gray-50">
               <tr>
-                <th>
+                <th className="px-4 py-2">
                   <div className="sort-button">
                     <span>Дата</span>
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th>
+                <th className="px-4 py-2">
                   <div className="sort-button">
                     <span>Время</span>
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th>
+                <th className="px-4 py-2">
                   <div className="sort-button">
                     <span>Оборудование</span>
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th>
+                <th className="px-4 py-2">
                   <div className="sort-button">
                     <span>Тип события</span>
                     <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th>Сообщение</th>
-                <th>Источник</th>
+                <th className="px-4 py-2">Сообщение</th>
+                <th className="px-4 py-2">Источник</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((entry, index) => (
-                <tr key={index}>
-                  <td>{entry.date}</td>
-                  <td>{entry.eventTime}</td>
-                  <td>{entry.equipment || '-'}</td>
-                  <td>
-                    <span className={
-                      entry.eventType === 'Ремонт' ? 'badge badge-red' : 
-                      entry.eventType === 'Остановка' ? 'badge badge-orange' : 
-                      entry.eventType === 'Работа' ? 'badge badge-green' : 
-                      entry.eventType === 'Подготовка' ? 'badge badge-blue' : 
-                      entry.eventType === 'Заливка' ? 'badge badge-yellow' : 
-                      'badge badge-gray'
-                    }>
-                      {entry.eventType}
+              {filteredData.map((item, index) => (
+                <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
+                  <td className="px-4 py-2">{item.date}</td>
+                  <td className="px-4 py-2">{item.time}</td>
+                  <td className="px-4 py-2">{item.equipment}</td>
+                  <td className="px-4 py-2">
+                    <span className={`badge badge-${getEventTypeBadgeColor(item.eventType)}`}>
+                      {item.eventType}
                     </span>
                   </td>
-                  <td>{entry.message}</td>
-                  <td>{entry.source}</td>
+                  <td className="px-4 py-2">{item.message}</td>
+                  <td className="px-4 py-2">{item.source}</td>
                 </tr>
               ))}
-              
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center text-gray-500 italic py-4">
+                  <td colSpan="6" className="px-4 py-4 text-center text-gray-500">
                     Нет данных для отображения
                   </td>
                 </tr>
@@ -176,4 +168,16 @@ const LogViewer = ({ logData, parsedData, filteredData, filterOptions, handleLog
       </div>
     </div>
   );
+};
+
+// Вспомогательная функция для определения цвета бейджа в зависимости от типа события
+const getEventTypeBadgeColor = (eventType) => {
+  switch(eventType) {
+    case 'Ремонт': return 'red';
+    case 'Остановка': return 'orange';
+    case 'Работа': return 'green';
+    case 'Подготовка': return 'blue';
+    case 'Заливка': return 'yellow';
+    default: return 'gray';
+  }
 };
