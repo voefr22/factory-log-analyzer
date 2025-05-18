@@ -1,7 +1,7 @@
 // components/Settings.js - Компонент для настроек пользователя
 
-// Извлекаем компоненты из библиотеки Lucide
-const { Save } = window.lucide;
+// Получаем иконки из Lucide
+const { Save, Bell, Clock, Database } = window.lucide;
 
 const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
   return (
@@ -63,13 +63,17 @@ const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
         
         <div className="space-y-4">
           <div className="form-group">
-            <label className="form-label">Интервал обновления (минуты)</label>
+            <label className="form-label flex items-center space-x-2">
+              <Clock size={16} />
+              <span>Интервал обновления (минуты)</span>
+            </label>
             <input
               type="number"
               className="form-input"
               placeholder="15"
               min="1"
               max="60"
+              defaultValue="15"
             />
           </div>
           
@@ -82,28 +86,37 @@ const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
           
           <div className="form-group">
             <label className="flex items-center space-x-2">
-              <input type="checkbox" className="h-5 w-5 text-blue-600" />
+              <Bell size={16} />
               <span>Отправлять уведомления о критических проблемах</span>
             </label>
+            <div className="mt-2 ml-7">
+              <label className="flex items-center space-x-2">
+                <input type="checkbox" className="h-4 w-4 text-blue-600" />
+                <span className="text-sm">Email</span>
+              </label>
+              <label className="flex items-center space-x-2 mt-2">
+                <input type="checkbox" className="h-4 w-4 text-blue-600" />
+                <span className="text-sm">Telegram</span>
+              </label>
+            </div>
           </div>
           
           <div className="form-group">
             <label className="flex items-center space-x-2">
-              <input type="checkbox" className="h-5 w-5 text-blue-600" defaultChecked />
+              <Database size={16} />
               <span>Сохранять историю журнала</span>
             </label>
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Глубина хранения истории (дни)</label>
-            <input
-              type="number"
-              className="form-input"
-              placeholder="30"
-              min="1"
-              max="365"
-              defaultValue="30"
-            />
+            <div className="mt-2 ml-7">
+              <label className="form-label text-sm">Глубина хранения истории (дни)</label>
+              <input
+                type="number"
+                className="form-input mt-1"
+                placeholder="30"
+                min="1"
+                max="365"
+                defaultValue="30"
+              />
+            </div>
           </div>
         </div>
         
@@ -123,64 +136,52 @@ const Settings = ({ apiKeys, setApiKeys, handleSaveApiKeys }) => {
         
         <div className="space-y-4">
           <div className="form-group">
-            <label className="form-label">Шаблоны типов событий</label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  className="form-input"
-                  defaultValue="ремонт, замена, диагностика"
-                  placeholder="Ключевые слова для ремонта"
-                />
-                <span className="badge badge-red">Ремонт</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  className="form-input"
-                  defaultValue="остановка, не работает, отключено"
-                  placeholder="Ключевые слова для остановки"
-                />
-                <span className="badge badge-orange">Остановка</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  className="form-input"
-                  defaultValue="в работе, включена, запуск"
-                  placeholder="Ключевые слова для работы"
-                />
-                <span className="badge badge-green">Работа</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  className="form-input"
-                  defaultValue="подготовка, настройка, регулировка"
-                  placeholder="Ключевые слова для подготовки"
-                />
-                <span className="badge badge-blue">Подготовка</span>
-              </div>
-            </div>
+            <label className="form-label">Шаблоны событий</label>
+            <textarea
+              className="form-textarea"
+              rows={4}
+              placeholder="Введите шаблоны для распознавания событий..."
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Каждый шаблон должен быть на новой строке. Используйте {event} для обозначения типа события.
+            </p>
           </div>
           
           <div className="form-group">
-            <label className="form-label">Распознавание оборудования</label>
+            <label className="form-label">Исключения</label>
             <textarea
-              className="form-textarea h-32"
-              defaultValue="ППО-1, ППО-2, ИЧТ-1, ИЧТ-2, ИЧТ-3, ЦМ-7, ЦМ-8, ЛЛ-1, ЛЛ-2, ЛЦ-1, ЛЦ-2, ЛЦ-3, ОЦЛ, ОУОЦ"
-              placeholder="Введите список оборудования через запятую"
-            ></textarea>
-            <p className="text-sm text-gray-500 mt-1">Для улучшения распознавания введите известные модели оборудования</p>
+              className="form-textarea"
+              rows={3}
+              placeholder="Введите исключения для фильтрации ложных срабатываний..."
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Приоритеты событий</label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className="w-24">Критический:</span>
+                <input type="text" className="form-input" placeholder="Ремонт, Авария" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-24">Высокий:</span>
+                <input type="text" className="form-input" placeholder="Остановка" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-24">Средний:</span>
+                <input type="text" className="form-input" placeholder="Подготовка" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-24">Низкий:</span>
+                <input type="text" className="form-input" placeholder="Информация" />
+              </div>
+            </div>
           </div>
         </div>
         
         <div className="mt-6">
           <button className="btn btn-primary">
-            Сохранить настройки схемы
+            Сохранить схему
           </button>
         </div>
       </div>
