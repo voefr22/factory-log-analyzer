@@ -61,8 +61,9 @@
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
             console.error('Глобальная ошибка:', error);
-            document.getElementById('error').style.display = 'block';
-            document.getElementById('error').innerHTML = 
+            var errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = 
                 '<h3>Произошла ошибка в приложении</h3>' +
                 '<button onclick="this.parentNode.style.display=\'none\'">×</button>' +
                 (message ? '<p>' + message + '</p>' : '') +
@@ -80,7 +81,7 @@
     <script src="libs/lucide.min.js"></script>
     <script src="libs/babel.min.js"></script>
     
-    <!-- Основное приложение -->
+    <!-- Основное приложение - обратите внимание, что имя файла должно совпадать с реальным файлом -->
     <script type="text/babel" src="app.js"></script>
 </body>
 </html>
