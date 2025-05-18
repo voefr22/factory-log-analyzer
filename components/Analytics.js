@@ -1,8 +1,10 @@
 // components/Analytics.js - Компонент для аналитических графиков и экспорта
 
-// Извлекаем компоненты из библиотек Recharts и Lucide
+// Получаем компоненты Recharts из глобальной переменной
 const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-      XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
+       XAxis, YAxis, CartesianGrid, Tooltip, Legend } = window.Recharts;
+
+// Получаем иконки из Lucide
 const { Download, Printer } = window.lucide;
 
 const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportReport }) => {
@@ -142,38 +144,39 @@ const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportR
           </div>
           <p className="text-gray-500 mt-2 text-sm">* На основе ИИ-анализа. Требуются дополнительные данные для точного прогноза.</p>
         </div>
-        {/* Экспорт отчета */}
-        <div className="card lg:col-span-2">
-          <div className="card-header">
-            <h2 className="card-title">Экспорт аналитики</h2>
-            <div className="flex space-x-2">
-              <button 
-                className="btn btn-primary flex items-center space-x-2"
-                onClick={() => handleExportReport('pdf')}
-              >
-                <Download size={16} />
-                <span>Экспорт PDF</span>
-              </button>
-              <button 
-                className="btn btn-success flex items-center space-x-2"
-                onClick={() => handleExportReport('excel')}
-              >
-                <Download size={16} />
-                <span>Экспорт Excel</span>
-              </button>
-              <button 
-                className="btn btn-secondary flex items-center space-x-2"
-                onClick={() => handleExportReport('print')}
-              >
-                <Printer size={16} />
-                <span>Печать</span>
-              </button>
-            </div>
+      </div>
+
+      {/* Экспорт отчета */}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="card-title">Экспорт аналитики</h2>
+          <div className="flex space-x-2">
+            <button 
+              className="btn btn-primary flex items-center space-x-2"
+              onClick={() => handleExportReport('pdf')}
+            >
+              <Download size={16} />
+              <span>Экспорт PDF</span>
+            </button>
+            <button 
+              className="btn btn-success flex items-center space-x-2"
+              onClick={() => handleExportReport('excel')}
+            >
+              <Download size={16} />
+              <span>Экспорт Excel</span>
+            </button>
+            <button 
+              className="btn btn-secondary flex items-center space-x-2"
+              onClick={() => handleExportReport('print')}
+            >
+              <Printer size={16} />
+              <span>Печать</span>
+            </button>
           </div>
-          <p className="text-gray-600 mt-4">
-            Экспортируйте данные аналитики для презентаций и отчетов. Включает все графики, статистику и рекомендации.
-          </p>
         </div>
+        <p className="text-gray-600 mt-4">
+          Экспортируйте данные аналитики для презентаций и отчетов. Включает все графики, статистику и рекомендации.
+        </p>
       </div>
     </div>
   );
