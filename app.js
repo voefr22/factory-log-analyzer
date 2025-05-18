@@ -1,7 +1,9 @@
 // app.js - Основной файл приложения
 
-// Инициализация Lucide иконок
-lucide.createIcons();
+// Инициализация Lucide иконок (если доступно)
+if (window.lucide && window.lucide.createIcons) {
+  window.lucide.createIcons();
+}
 
 // Основной компонент приложения
 const App = () => {
