@@ -1,8 +1,11 @@
 // components/Analytics.js - Компонент для аналитических графиков и экспорта
 
+// Извлекаем компоненты из библиотек Recharts и Lucide
+const { ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend } = Recharts;
+const { Download, Printer } = lucide;
+
 const Analytics = ({ equipmentStats, eventTypeStats, timelineData, handleExportReport }) => {
-  const { Download, Printer } = lucide;
-  
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF0000', '#82ca9d'];
   
   // Назначаем специфические цвета для типов событий
